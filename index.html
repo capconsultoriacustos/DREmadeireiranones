@@ -8087,7 +8087,7 @@ function calcularDreParaMetas(ano) {
     if (!catId && somenteClass) return;
     let grupoId = catId ? getDreCatGrupo(catId) : null;
     if (!grupoId && !somenteClass && grupoBase) grupoId = grupoBase.id;
-    if (grupoId && valoresMes[m][grupoId] !== undefined) valoresMes[m][grupoId] += (l.valor||0);
+    if (grupoId && valoresMes[m][grupoId] !== undefined) valoresMes[m][grupoId] += (l.valor||0) * dreSinalCat(catId, grupoId);
   });
   db.lancamentos.forEach(l => {
     const dtRef = l.dtcompra; if (!dtRef) return;
@@ -8096,7 +8096,7 @@ function calcularDreParaMetas(ano) {
     const prodObj = db.produtos.find(x => x.id === l.prod);
     const catId = l.cat_dre || (prodObj ? prodObj.cat : null);
     const grupoId = catId ? getDreCatGrupo(catId) : null;
-    if (grupoId && valoresMes[m][grupoId] !== undefined) valoresMes[m][grupoId] += (l.valor||0);
+    if (grupoId && valoresMes[m][grupoId] !== undefined) valoresMes[m][grupoId] += (l.valor||0) * dreSinalCat(catId, grupoId);
   });
 
   // Variação de estoque somada ao CPV (mesma regra do DRE)
@@ -10411,7 +10411,7 @@ function renderDfc() {
       const catObj  = catLanc || catProd;
       const grupoId = catObj ? catObj.grupo : (grupoPadraoReceita && grupoPadraoReceita.id);
       if (grupoId && dados[m][grupoId] !== undefined) {
-        dados[m][grupoId] += valParc;
+        dados[m][grupoId] += valParc * (catObj ? dreSinalCat(catObj.id, grupoId) : 1);
         _guardar(m, grupoId, { kind: 'rec', lancId: l.id, cliente: l.cliente, prod: l.prod,
           valParc, venc: dtRef, nf: l.nf, banco: l.banco, tipo_pag: l.tipo_pag,
           parcIdx: 1, totalParc: l.parcelas || 1, isRecebido: l.recebido === 'sim' });
@@ -10437,7 +10437,7 @@ function renderDfc() {
         if (parseInt(parts[0]) !== ano) continue;
         const m = parseInt(parts[1]);
         if (grupoId && dados[m][grupoId] !== undefined) {
-          dados[m][grupoId] += valParc;
+          dados[m][grupoId] += valParc * (catObj ? dreSinalCat(catObj.id, grupoId) : 1);
           const pagos = _parseParcelas(l.parcela_datas).pagos;
           _guardar(m, grupoId, { kind: 'des', lancId: l.id, forn: l.forn, prod: l.prod,
             valParc, venc, nf: l.nf, banco: l.banco, tipo_pag: l.tipo_pag,
@@ -10458,7 +10458,7 @@ function renderDfc() {
     if (!catObj) return;
     const key = catObj.grupo;
     if (dados[m][key] !== undefined) {
-      dados[m][key] += (l.valor || 0);
+      dados[m][key] += (l.valor || 0) * dreSinalCat(catObj.id, key);
       _guardar(m, key, { kind: 'dfc', id: l.id, cat: l.cat, desc: l.desc,
         valor: l.valor || 0, data: l.data, recorrente: l.recorrente,
         tipoEntrada: catObj.tipo === 'entrada' });
@@ -10773,6 +10773,18 @@ function getDreGrupo(id) { return db.dre_grupos.find(x => x.id === id); }
 function getDreGrupoNome(id) { const g = getDreGrupo(id); return g ? g.nome : '—'; }
 function getDreCatNome(id) { const c = db.dfc_cats.find(x => x.id === id); return c ? c.nome : (id || '—'); }
 function getDreCatGrupo(id) { const c = db.dfc_cats.find(x => x.id === id); return c ? c.grupo : ''; }
+// Sinal da categoria dentro do grupo: permite grupo com categorias de
+// Entrada e Saída juntas (ex.: Resultado Financeiro = Receita Financeira (+)
+// e Despesas Financeiras (−)). Categoria com tipo oposto ao do grupo abate
+// do grupo (−1); demais casos somam normalmente (+1).
+function dreSinalCat(catId, grupoId) {
+  if (!catId || !grupoId) return 1;
+  const c = db.dfc_cats.find(x => x.id === catId);
+  const g = db.dre_grupos.find(x => x.id === grupoId);
+  if (!c || !g) return 1;
+  if ((c.tipo === 'entrada' || c.tipo === 'saida') && (g.tipo === 'entrada' || g.tipo === 'saida') && c.tipo !== g.tipo) return -1;
+  return 1;
+}
 
 // Popula o select "Categoria" nos lançamentos a pagar/receber com as
 // Categorias já cadastradas em DFC → Categorias (mesma lista, sem duplicidade)
@@ -11210,13 +11222,14 @@ function renderDre() {
         valor: o.valor,
         status: o.quitado ? 'Recebido' : 'A Receber'
       };
-      valoresMes[m][grupoId] += o.valor;
+      const sinalCat = dreSinalCat(catId, grupoId);
+      valoresMes[m][grupoId] += o.valor * sinalCat;
       itensMes[m][grupoId].push(item);
       // Categoria da venda; sem categoria definida, entra como "Sem categoria"
       // (só faz sentido dentro do grupo-base, onde a venda caiu por fallback)
       const catKey = catId || (grupoId === grupoBaseId ? SEM_CAT : null);
       if (catKey) {
-        valoresMesCat[m][catKey] = (valoresMesCat[m][catKey] || 0) + o.valor;
+        valoresMesCat[m][catKey] = (valoresMesCat[m][catKey] || 0) + o.valor * sinalCat;
         (itensMesCat[m][catKey] = itensMesCat[m][catKey] || []).push(item);
       }
     });
@@ -11241,10 +11254,11 @@ function renderDre() {
         valor: o.valor,
         status: o.quitado ? 'Pago' : 'A Pagar'
       };
-      valoresMes[m][grupoId] += o.valor;
+      const sinalCat = dreSinalCat(catId, grupoId);
+      valoresMes[m][grupoId] += o.valor * sinalCat;
       itensMes[m][grupoId].push(item);
       if (catId) {
-        valoresMesCat[m][catId] = (valoresMesCat[m][catId] || 0) + o.valor;
+        valoresMesCat[m][catId] = (valoresMesCat[m][catId] || 0) + o.valor * sinalCat;
         (itensMesCat[m][catId] = itensMesCat[m][catId] || []).push(item);
       }
     });
@@ -15052,7 +15066,7 @@ function clearCustosFixosFiltros() {
 
 
 // ── Marcador de versão (para confirmar qual arquivo está no ar) ──
-window.APP_BUILD = '2026-10-02 · madeireira-nones · nomes-padrao';
+window.APP_BUILD = '2026-10-02 · madeireira-nones · resultado-financeiro';
 (function(){ var b = document.getElementById('sidebar-build'); if (b) b.textContent = 'build ' + window.APP_BUILD; })();
 
 // Fechar modais clicando fora

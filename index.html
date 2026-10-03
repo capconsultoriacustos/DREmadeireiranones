@@ -4268,6 +4268,22 @@ async function sbFetch(table, method='GET', body=null, params='') {
   // quebraria o conteúdo.
   const bodyLimpo = (body && table !== 'config') ? limparDados(body) : body;
   const bodyFinal = bodyLimpo ? sbNormalizarDatas(bodyLimpo) : bodyLimpo;
+  // Nomes no padrão (primeira letra maiúscula): reflete também no objeto
+  // em memória, para a tela já mostrar o nome formatado sem recarregar.
+  if (gravacao && table !== 'config' && body && !Array.isArray(body) && typeof body === 'object') {
+    const alvoMem = (method === 'PATCH') ? (function(){
+      const m = /id=eq\.([^&]+)/.exec(params || '');
+      const cfg = (typeof AUDIT_TABELAS !== 'undefined') ? AUDIT_TABELAS[table] : null;
+      return (m && cfg && cfg.db && Array.isArray(db[cfg.db]))
+        ? db[cfg.db].find(r => r && r.id === decodeURIComponent(m[1])) : null;
+    })() : null;
+    Object.keys(CAMPOS_NOME_FORMATADO).forEach(k => {
+      if (typeof body[k] === 'string' && bodyLimpo && typeof bodyLimpo[k] === 'string') {
+        body[k] = bodyLimpo[k];
+        if (alvoMem) alvoMem[k] = bodyLimpo[k];
+      }
+    });
+  }
   _sbUltimoErro = null;
 
   const enviar = async (accessToken) => {
@@ -4350,6 +4366,37 @@ async function sbFetch(table, method='GET', body=null, params='') {
 // `esc()` é a proteção de segunda camada, usada ao exibir texto que não
 // passa pelo banco de dados (follow-ups, mensagens, auditoria).
 // ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════
+// PADRÃO DE NOMES: primeira letra maiúscula
+// "RECEITAS COM PINUS TRATADO" -> "Receitas com Pinus Tratado"
+// Siglas conhecidas continuam em maiúsculas (CPV, IPTU, PIX...) e
+// preposições/artigos ficam em minúsculas (de, da, com, e...).
+// ══════════════════════════════════════════
+const NOME_SIGLAS = new Set(['ROB','ROL','CPV','CMV','ADM','EBITDA','LAJIR','IR','BB','TED','DOC','PIX','RH','JR','IPTU','IPVA','IBAMA','CNPJ','CPF','NF','NFE','DRE','DFC','LTDA','EPP','MEI','EIRELI','S/A','SA','ICMS','ISS','ISSQN','INSS','FGTS','IRPF','IRPJ','CSLL','PIS','COFINS','IPI','TI','CEO','RS','SC','PR','SP','EUA','CEP','DAS','GPS','DARF','PJ','PF','EPI','MDF','OSB','CNH','DETRAN','SENAI','SESI','SEBRAE','CRC','CREA','ART']);
+const NOME_MINUSCULAS = new Set(['de','da','do','das','dos','e','com','em','a','o','as','os','para','por','na','no','nas','nos','ao','aos','à','às','sem','sob','ou']);
+function formatarNome(v) {
+  if (typeof v !== 'string') return v;
+  const limpo = v.replace(/\s+/g, ' ').trim();
+  if (!limpo) return limpo;
+  let primeira = true;
+  return limpo.split(' ').map(tok => {
+    const nucleo = tok.replace(/[^0-9A-Za-zÀ-ÿ\/]/g, '');
+    const up = nucleo.toUpperCase();
+    let out;
+    if (nucleo && (NOME_SIGLAS.has(up) || (/\d/.test(nucleo) && /[A-Za-z]/.test(nucleo)))) {
+      out = tok.toUpperCase();
+    } else if (nucleo && !primeira && NOME_MINUSCULAS.has(nucleo.toLowerCase()) && nucleo === tok.replace(/[()\-]/g,'')) {
+      out = tok.toLowerCase();
+    } else {
+      out = tok.toLowerCase().replace(/(^|[(\-\/"'])([a-zà-ÿ])/g, (m, a, b) => a + b.toUpperCase());
+    }
+    if (nucleo) primeira = false;
+    return out;
+  }).join(' ');
+}
+// Campos de texto que seguem o padrão em todo o sistema
+const CAMPOS_NOME_FORMATADO = { nome: 1, apelido: 1, contato: 1 };
+
 function limparTexto(v) {
   if (typeof v !== 'string') return v;
   return v.replace(/[<>]/g, '').replace(/"/g, "'");
@@ -4368,7 +4415,10 @@ function limparDados(x, chave, prof) {
   prof = prof || 0;
   if (chave && CAMPOS_SEM_LIMPEZA[chave]) return x;
   if (prof > 6 || x == null) return x;
-  if (typeof x === 'string') return limparTexto(x);
+  if (typeof x === 'string') {
+    const t = limparTexto(x);
+    return (chave && CAMPOS_NOME_FORMATADO[chave]) ? formatarNome(t) : t;
+  }
   if (Array.isArray(x)) return x.map(i => limparDados(i, chave, prof + 1));
   if (typeof x === 'object') {
     const out = {};
@@ -15002,7 +15052,7 @@ function clearCustosFixosFiltros() {
 
 
 // ── Marcador de versão (para confirmar qual arquivo está no ar) ──
-window.APP_BUILD = '2026-10-02 · madeireira-nones';
+window.APP_BUILD = '2026-10-02 · madeireira-nones · nomes-padrao';
 (function(){ var b = document.getElementById('sidebar-build'); if (b) b.textContent = 'build ' + window.APP_BUILD; })();
 
 // Fechar modais clicando fora

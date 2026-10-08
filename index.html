@@ -4631,7 +4631,7 @@ async function loadAllData() {
       if (!lancId) return;
       let obj = null;
       try { obj = JSON.parse(c.value); } catch(e) { obj = null; }
-      if (obj && obj.ativo) db.custosfixos[lancId] = { ativo: true, vigencias: obj.vigencias || [] };
+      if (obj && obj.ativo) db.custosfixos[lancId] = { ativo: true, vigencias: obj.vigencias || [], gerados: obj.gerados || {} };
     });
     // Cobrança: follow-ups e baixas parciais (key = "cobranca:<lancId>:<parcela>")
     cobrancaDados = {};
@@ -5717,6 +5717,7 @@ async function trocarEmpresa(id) {
   pintarSeletorEmpresa();
   atualizarTagsEmpresa();
   await loadAllData();
+  await cfSincronizarTodas();
   renderPaginaAtual();
 }
 
@@ -5924,8 +5925,11 @@ async function saveLancamento() {
   // mas só deve aparecer quando essa outra empresa (ou o Consolidado) for selecionada.
   const pertence = pertenceEmpresaAtiva(lanc.empresa_id);
   if (pertence) db.lancamentos.push(lanc);
+  let cfGerados = 0;
+  if (ehCustoFixo) cfGerados = await cfSincronizarRecorrencias(lanc.id, lanc);
   clearLancamento(); closeModal('modal-novo-lanc'); renderLancamentos(); renderApagar(); renderPagas(); renderCustosFixos(); populateYearSelects();
   if (!pertence) alert(`✅ Lançamento salvo em "${empresaNome(lanc.empresa_id)}". Ele não aparece aqui porque essa não é a empresa ativa no momento.`);
+  if (cfGerados) alert(`🔁 Custo fixo: ${cfGerados} lançamento(s) gerado(s) para os meses seguintes, conforme a vigência.`);
 }
 
 function clearLancamento() {
@@ -6150,6 +6154,7 @@ async function updateLancamento() {
   if (!okU) { alert('❌ Não foi possível salvar a edição no banco de dados.' + sbErroMsg()); return; }
   const okCfE = await cfSalvarNoBanco(l.id, ehCustoFixoEdit, _vigTemp.edit);
   if (!okCfE) alert('⚠ O lançamento foi salvo, mas o custo fixo/vigências não puderam ser gravados.' + sbErroMsg());
+  if (okCfE && ehCustoFixoEdit) await cfSincronizarRecorrencias(l.id, l);
   // Se a empresa foi trocada para uma diferente da ativa no seletor, o
   // registro tem que sumir da lista atual (senão fica aparecendo na empresa errada).
   if (!pertenceEmpresaAtiva(l.empresa_id)) db.lancamentos = db.lancamentos.filter(x => x.id !== l.id);
@@ -12825,6 +12830,7 @@ function renderAnaliseFluxo() {
 
 async function initApp() {
   await loadAllData();
+  await cfSincronizarTodas();
   populateYearSelects();
   populateDfcYearSelects();
   restaurarFiltrosDash();
@@ -14691,12 +14697,99 @@ async function cfSalvarNoBanco(lancId, ativo, vigencias) {
   const del = await sbFetch('config', 'DELETE', null, `?key=eq.${encodeURIComponent(key)}`);
   if (del === null) return false;
   if (!ativo) { delete db.custosfixos[lancId]; bumpDbVer(); return true; }
-  const payload = { ativo: true, vigencias: vigOrdenar(vigencias || []) };
+  const gerAnt = (db.custosfixos[lancId] && db.custosfixos[lancId].gerados) || {};
+  const payload = { ativo: true, vigencias: vigOrdenar(vigencias || []), gerados: gerAnt };
   const ok = await sbFetch('config', 'POST', { id: uid(), key, value: JSON.stringify(payload) });
   if (!ok) return false;
   db.custosfixos[lancId] = payload;
   bumpDbVer();
   return true;
+}
+
+// ── Recorrência: gera os lançamentos dos meses seguintes ──────────────
+// O lançamento original cobre o 1º mês. Para cada mês seguinte coberto por
+// uma vigência é criado um lançamento a pagar (1 parcela, em aberto).
+// Vigência sem fim gera sempre até CF_HORIZONTE_MESES à frente de hoje (o
+// horizonte avança sozinho a cada abertura do sistema).
+// Os meses já gerados ficam registrados em "gerados" ({ 'AAAA-MM': idLanc })
+// para nunca duplicar — nem recriar um mês que o usuário excluiu à mão.
+const CF_HORIZONTE_MESES = 12;
+var _cfSyncRodando = false;
+
+async function cfSincronizarRecorrencias(lancId, lObj) {
+  const dados = cfDadosDoLanc(lancId);
+  const l = lObj || db.lancamentos.find(x => x.id === lancId);
+  if (!dados || !dados.ativo || !l) return 0;
+  const baseVenc = l.dtprev || l.dtcompra;
+  const baseComp = l.dtcompra || baseVenc;
+  if (!baseVenc) return 0;
+  const vigs = vigOrdenar(dados.vigencias || []);
+  const gerados = Object.assign({}, dados.gerados || {});
+  let mudou = false, criados = 0;
+
+  // 1) Vigência encurtada/alterada: remove gerados ainda em aberto que saíram do período
+  for (const mk of Object.keys(gerados)) {
+    const g = db.lancamentos.find(x => x.id === gerados[mk]);
+    if (!g || g.pago === 'sim') continue;
+    if (vigVigente(vigs, g.dtprev || g.dtcompra)) continue;
+    const okDel = await sbFetch('lancamentos', 'DELETE', null, `?id=eq.${g.id}`);
+    if (!okDel) continue;
+    db.lancamentos = db.lancamentos.filter(x => x.id !== g.id);
+    delete gerados[mk]; mudou = true;
+  }
+
+  // 2) Gera os meses que faltam
+  if (vigs.length) {
+    const horizonte = _vencMensal(today(), CF_HORIZONTE_MESES + 1);
+    let fimGeral = '';
+    vigs.forEach(v => { const f = v.fim || horizonte; if (f > fimGeral) fimGeral = f; });
+    const mesOrig = baseVenc.slice(0, 7);
+    for (let k = 2; k <= 121; k++) {
+      const venc = _vencMensal(baseVenc, k);
+      if (!venc || venc > fimGeral) break;
+      const mk = venc.slice(0, 7);
+      if (mk === mesOrig || gerados[mk]) continue;
+      const vig = vigVigente(vigs, venc);
+      if (!vig) continue;
+      const marca = `[CF:${lancId}:${mk}]`;
+      const existente = db.lancamentos.find(x => (x.obs || '').indexOf(marca) !== -1);
+      if (existente) { gerados[mk] = existente.id; mudou = true; continue; }
+      const valor = (vig.valor != null && vig.valor !== '') ? Number(vig.valor) : ((l.valor || 0) / (l.parcelas || 1));
+      const novo = {
+        id: uid(), empresa_id: l.empresa_id || null,
+        dtcompra: _vencMensal(baseComp, k), dtprev: venc, nf: '',
+        forn: l.forn || '', prod: l.prod || '', valor: Math.round(valor * 100) / 100,
+        parcelas: 1, financeiro: l.financeiro || 'nao', pago: 'nao',
+        tipo_pag: l.tipo_pag || '', banco: l.banco || '', cat_dre: l.cat_dre || '',
+        obs: `Custo fixo recorrente (gerado automaticamente) ${marca}`,
+        dtpago: '', parcela_datas: null
+      };
+      const ok = await sbFetch('lancamentos', 'POST', novo);
+      if (!ok) break;
+      if (pertenceEmpresaAtiva(novo.empresa_id)) db.lancamentos.push(novo);
+      gerados[mk] = novo.id; mudou = true; criados++;
+    }
+  }
+
+  if (mudou) {
+    dados.gerados = gerados;
+    await cfSalvarNoBanco(lancId, true, dados.vigencias);
+    bumpDbVer();
+  }
+  return criados;
+}
+
+async function cfSincronizarTodas() {
+  if (_cfSyncRodando) return 0;
+  _cfSyncRodando = true;
+  let total = 0;
+  try {
+    for (const id of Object.keys(db.custosfixos || {})) {
+      try { total += await cfSincronizarRecorrencias(id); }
+      catch (e) { console.error('Custo fixo: falha ao gerar recorrências', id, e); }
+    }
+  } finally { _cfSyncRodando = false; }
+  return total;
 }
 
 // ── Interface do formulário ────────────────────────────────────────────
@@ -15066,7 +15159,7 @@ function clearCustosFixosFiltros() {
 
 
 // ── Marcador de versão (para confirmar qual arquivo está no ar) ──
-window.APP_BUILD = '2026-10-02 · madeireira-nones · resultado-financeiro';
+window.APP_BUILD = '2026-10-07 · madeireira-nones · custo-fixo-recorrente';
 (function(){ var b = document.getElementById('sidebar-build'); if (b) b.textContent = 'build ' + window.APP_BUILD; })();
 
 // Fechar modais clicando fora

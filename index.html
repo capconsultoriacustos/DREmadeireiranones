@@ -868,10 +868,15 @@ tr.cob-dia-vazio > td {
 .aviso-atraso-cli:last-child { border-bottom:none; }
 
 /* Item do menu Cobrança Advogado — fundo roxo para chamar atenção */
-.nav-sub-item.nav-advogado { background:#6d28d9; color:#fff; font-weight:700; }
-.nav-sub-item.nav-advogado svg { stroke:#fff; }
-.nav-sub-item.nav-advogado:hover { background:#5b21b6; color:#fff; }
-.nav-sub-item.nav-advogado.active { background:#4c1d95; color:#fff; box-shadow:inset 3px 0 0 #c4b5fd; }
+.nav-sub-item.nav-advogado { color:#6d28d9; font-weight:700; }
+.nav-sub-item.nav-advogado svg { stroke:#7c3aed; }
+.nav-sub-item.nav-advogado:hover { background:#ede9fe; color:#4c1d95; }
+.nav-sub-item.nav-advogado.active { background:#ede9fe; color:#4c1d95; }
+.nav-sub-item.nav-advogado.active svg { stroke:#6d28d9; }
+.nav-advogado-pino {
+  width:7px; height:7px; border-radius:50%; background:#7c3aed;
+  margin-left:auto; flex-shrink:0; box-shadow:0 0 0 3px rgba(124,58,237,.18);
+}
 /* Botão de envio para advogado */
 .btn-advogado { background:#6d28d9 !important; color:#fff !important; border:none !important; }
 .btn-advogado:hover { background:#5b21b6 !important; }
@@ -1105,6 +1110,7 @@ tr.cob-dia-vazio > td {
         <div class="nav-sub-item nav-advogado" onclick="showPage('cobranca-advogado')" id="nav-cobranca-advogado">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3.5 3.5 0 0 0 6 0z"/><path d="M19 7l-3 7a3.5 3.5 0 0 0 6 0z"/><path d="M8 21h8"/></svg>
           Cobrança Advogado
+          <span class="nav-advogado-pino"></span>
         </div>
         <div class="nav-sub-item" onclick="showPage('recebido')" id="nav-recebido">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -15350,7 +15356,7 @@ function clearCustosFixosFiltros() {
 
 
 // ── Marcador de versão (para confirmar qual arquivo está no ar) ──
-window.APP_BUILD = '2026-10-15b · madeireira-nones · codigo-cliente-receber';
+window.APP_BUILD = '2026-10-15c · madeireira-nones · codigo-cliente-receber';
 (function(){ var b = document.getElementById('sidebar-build'); if (b) b.textContent = 'build ' + window.APP_BUILD; })();
 
 // Fechar modais clicando fora

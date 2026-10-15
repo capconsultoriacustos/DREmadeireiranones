@@ -1919,7 +1919,7 @@ tr.cob-dia-vazio > td {
       <div class="page-header">
         <div>
           <div class="page-title">Cobrança</div>
-          <div class="page-sub" style="margin-bottom:0">Agenda semanal de clientes em atraso · follow-up de conversas · recebimento parcelado</div>
+          <div class="page-sub" style="margin-bottom:0">Agenda mensal de clientes em atraso · follow-up de conversas · recebimento parcelado</div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn-pdf" style="background:#b91c1c" onclick="abrirAvisoAtraso(true)">🔔 Avisos de Atraso</button>
@@ -1931,21 +1931,21 @@ tr.cob-dia-vazio > td {
       <div id="cobranca-kpis" class="grid4" style="margin-bottom:20px;"></div>
 
       <div class="card">
-        <div class="card-title">Semana de cobrança</div>
+        <div class="card-title">Mês de cobrança</div>
         <div class="cob-semana-bar">
           <div class="form-group"><label>Ano</label>
-            <select id="cob-ano" onchange="popularSemanasCobranca(true); renderCobranca();" style="width:110px"></select>
+            <select id="cob-ano" onchange="renderCobranca()" style="width:110px"></select>
           </div>
-          <div class="form-group"><label>Semana</label>
-            <select id="cob-semana" onchange="renderCobranca()" style="min-width:230px"></select>
+          <div class="form-group"><label>Mês</label>
+            <select id="cob-mes" onchange="renderCobranca()" style="width:150px"></select>
           </div>
-          <button class="cob-nav-btn" onclick="navSemanaCobranca(-1)" title="Semana anterior">◀</button>
-          <button class="cob-nav-btn" onclick="semanaAtualCobranca()">Semana atual</button>
-          <button class="cob-nav-btn" onclick="navSemanaCobranca(1)" title="Próxima semana">▶</button>
+          <button class="cob-nav-btn" onclick="navMesCobranca(-1)" title="Mês anterior">◀</button>
+          <button class="cob-nav-btn" onclick="mesAtualCobranca()">Mês atual</button>
+          <button class="cob-nav-btn" onclick="navMesCobranca(1)" title="Próximo mês">▶</button>
           <span class="cob-periodo" id="cob-periodo">—</span>
           <div class="form-group" style="margin-left:auto"><label>Exibir</label>
             <select id="cob-escopo" onchange="renderCobranca()" style="min-width:190px">
-              <option value="semana">Somente a semana escolhida</option>
+              <option value="mes">Somente o mês escolhido</option>
               <option value="todas">Todas as pendências</option>
             </select>
           </div>
@@ -3193,7 +3193,7 @@ tr.cob-dia-vazio > td {
       <button class="btn btn-secondary" style="flex:1;font-size:12px" onclick="cobPrevSomarDias(15)">+15 dias</button>
       <button class="btn btn-secondary" style="flex:1;font-size:12px" onclick="cobPrevSomarDias(30)">+30 dias</button>
     </div>
-    <p style="font-size:11px;color:#a8a29e;margin-top:10px;">A data altera apenas esta parcela e a move para o dia da semana correspondente na agenda de cobrança.</p>
+    <p style="font-size:11px;color:#a8a29e;margin-top:10px;">A data altera apenas esta parcela e a move para o dia correspondente na agenda de cobrança.</p>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-cob-previsao')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarPrevisaoCobranca()">✓ Salvar previsão</button>
@@ -15237,84 +15237,76 @@ async function cobSalvar(lancId, parcIdx) {
   return !!ok;
 }
 
-// ── Seletor de semana ─────────────────────────────────────────────────
-function popularSemanasCobranca(forcar) {
+// ── Seletor de mês/ano ────────────────────────────────────────────────
+function popularMesesCobranca() {
   const selAno = document.getElementById('cob-ano');
-  const selSem = document.getElementById('cob-semana');
-  if (!selAno || !selSem) return;
-
+  const selMes = document.getElementById('cob-mes');
+  if (!selAno || !selMes) return;
   if (!selAno.options.length) {
     const atual = new Date().getFullYear();
     const anos = new Set();
     for (let y = atual - 2; y <= atual + 1; y++) anos.add(y);
     db.lancreceber.forEach(l => { if (l.dtprev) anos.add(parseInt(l.dtprev.split('-')[0])); });
-    selAno.innerHTML = [...anos].sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
-    selAno.value = semanaISO(today()).ano;
+    selAno.innerHTML = [...anos].filter(y => y > 1990).sort((a,b)=>b-a).map(y=>`<option value="${y}">${y}</option>`).join('');
+    selAno.value = atual;
   }
-  if (!selSem.options.length || forcar) {
-    const ano = parseInt(selAno.value) || new Date().getFullYear();
-    const total = totalSemanasISO(ano);
-    let html = '';
-    for (let w = 1; w <= total; w++) {
-      const seg = segundaDaSemana(ano, w);
-      const dom = new Date(seg); dom.setDate(seg.getDate()+6);
-      const r = d => String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
-      html += `<option value="${w}">Semana ${w} · ${r(seg)} a ${r(dom)}</option>`;
-    }
-    selSem.innerHTML = html;
-    const hj = semanaISO(today());
-    selSem.value = (hj.ano === ano) ? Math.min(hj.semana, total) : 1;
+  if (!selMes.options.length) {
+    selMes.innerHTML = meses.slice(1).map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+    selMes.value = new Date().getMonth() + 1;
   }
 }
-function semanaAtualCobranca() {
-  const hj = semanaISO(today());
+function _garantirAnoCobranca(ano) {
   const selAno = document.getElementById('cob-ano');
-  if (![...selAno.options].some(o => o.value == hj.ano)) {
-    selAno.insertAdjacentHTML('afterbegin', `<option value="${hj.ano}">${hj.ano}</option>`);
+  if (![...selAno.options].some(o => o.value == ano)) {
+    selAno.insertAdjacentHTML('afterbegin', `<option value="${ano}">${ano}</option>`);
+    const ops = [...selAno.options].sort((a,b) => b.value - a.value);
+    selAno.innerHTML = ops.map(o => o.outerHTML).join('');
   }
-  selAno.value = hj.ano;
-  popularSemanasCobranca(true);
-  document.getElementById('cob-semana').value = hj.semana;
-  document.getElementById('cob-escopo').value = 'semana';
+  selAno.value = ano;
+}
+function mesAtualCobranca() {
+  const hj = new Date();
+  _garantirAnoCobranca(hj.getFullYear());
+  document.getElementById('cob-mes').value = hj.getMonth() + 1;
+  document.getElementById('cob-escopo').value = 'mes';
   renderCobranca();
 }
-function navSemanaCobranca(passo) {
-  const selAno = document.getElementById('cob-ano');
-  const selSem = document.getElementById('cob-semana');
-  let ano = parseInt(selAno.value), sem = parseInt(selSem.value) + passo;
-  if (sem < 1) { ano -= 1; if (![...selAno.options].some(o=>o.value==ano)) selAno.insertAdjacentHTML('beforeend', `<option value="${ano}">${ano}</option>`); selAno.value = ano; popularSemanasCobranca(true); sem = totalSemanasISO(ano); }
-  else if (sem > totalSemanasISO(ano)) { ano += 1; if (![...selAno.options].some(o=>o.value==ano)) selAno.insertAdjacentHTML('afterbegin', `<option value="${ano}">${ano}</option>`); selAno.value = ano; popularSemanasCobranca(true); sem = 1; }
-  selSem.value = sem;
-  document.getElementById('cob-escopo').value = 'semana';
+function navMesCobranca(passo) {
+  let ano = parseInt(document.getElementById('cob-ano').value);
+  let mes = parseInt(document.getElementById('cob-mes').value) + passo;
+  if (mes < 1)  { mes = 12; ano -= 1; }
+  if (mes > 12) { mes = 1;  ano += 1; }
+  _garantirAnoCobranca(ano);
+  document.getElementById('cob-mes').value = mes;
+  document.getElementById('cob-escopo').value = 'mes';
   renderCobranca();
 }
 function clearCobrancaFiltros() {
   ['cob-cliente','cob-busca','cob-atraso-min','cob-tipodoc'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cob-situacao').value = 'atraso';
-  document.getElementById('cob-escopo').value = 'semana';
+  document.getElementById('cob-escopo').value = 'mes';
   renderCobranca();
 }
 
-// ── Render da agenda semanal ──────────────────────────────────────────
+// ── Render da agenda (por mês, agrupada por dia de vencimento) ────────
 function renderCobranca() {
   if (!paginaVisivel('cobranca')) return;
-  popularSemanasCobranca();
+  popularMesesCobranca();
   _sincronizarQuitadasCobranca();
 
   const ano      = parseInt(document.getElementById('cob-ano').value) || new Date().getFullYear();
-  const sem      = parseInt(document.getElementById('cob-semana').value) || 1;
-  const escopo   = document.getElementById('cob-escopo').value || 'semana';
+  const mes      = parseInt(document.getElementById('cob-mes').value) || (new Date().getMonth() + 1);
+  const escopo   = document.getElementById('cob-escopo').value || 'mes';
   const cliente  = document.getElementById('cob-cliente').value;
   const situacao = document.getElementById('cob-situacao').value || 'atraso';
   const busca    = (document.getElementById('cob-busca').value || '').trim().toLowerCase();
   const atrasoMin = parseInt(document.getElementById('cob-atraso-min').value);
   const tipoDocCob = document.getElementById('cob-tipodoc') ? document.getElementById('cob-tipodoc').value : '';
 
-  const seg = segundaDaSemana(ano, sem);
-  const dom = new Date(seg); dom.setDate(seg.getDate()+6);
-  const ini = _isoStr(seg), fim = _isoStr(dom);
+  const ini = `${ano}-${String(mes).padStart(2,'0')}-01`;
+  const fim = `${ano}-${String(mes).padStart(2,'0')}-${String(new Date(ano, mes, 0).getDate()).padStart(2,'0')}`;
   document.getElementById('cob-periodo').textContent =
-    (escopo === 'semana') ? `${fmtDate(ini)} a ${fmtDate(fim)}` : 'Todas as pendências';
+    (escopo === 'mes') ? `${meses[mes]} de ${ano}` : 'Todas as pendências';
 
   const hoje = today();
   const list = getParcelasReceber(false).filter(p => {
@@ -15324,7 +15316,7 @@ function renderCobranca() {
     if (p.valParc - cobTotalBaixas(p.lancId, p.parcIdx) <= 0.005) return false;
     if (situacao === 'atraso' && !(p.venc && p.venc < hoje)) return false;
     if (situacao === 'hoje'   && p.venc !== hoje) return false;
-    if (escopo === 'semana') { if (!p.venc || p.venc < ini || p.venc > fim) return false; }
+    if (escopo === 'mes') { if (!p.venc || p.venc < ini || p.venc > fim) return false; }
     if (!isNaN(atrasoMin) && atrasoMin > 0) {
       const d = (p.venc && p.venc < hoje) ? diffDias(p.venc, hoje) : 0;
       if (d < atrasoMin) return false;
@@ -15349,46 +15341,39 @@ function renderCobranca() {
     <div class="card kpi"><div class="kpi-val" style="color:#16a34a">${fmtBRL(totalParcial)}</div><div class="kpi-lbl">Recebido parcial</div></div>
     <div class="card kpi"><div class="kpi-val" style="color:#d97706">${clientesSet.size} <small style="font-size:13px;color:#a8a29e">cli · ${maiorAtraso}d</small></div><div class="kpi-lbl">Clientes / maior atraso</div></div>`;
 
-  // Agrupar por dia da semana (segunda → domingo), na vertical
-  const grupos = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], sem:[] };
-  list.forEach(p => {
-    if (!p.venc) { grupos.sem.push(p); return; }
-    grupos[(_dataLocal(p.venc).getDay() + 6) % 7].push(p);
-  });
-  Object.keys(grupos).forEach(k => grupos[k].sort((a,b) =>
-    (a.venc||'').localeCompare(b.venc||'') || getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente))));
-
-  const ordem = [0,1,2,3,4];                       // segunda a sexta sempre aparecem
-  if (grupos[5].length) ordem.push(5);
-  if (grupos[6].length) ordem.push(6);
-
   const tb = document.getElementById('tb-cobranca');
   if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="12" class="empty-state">Nenhuma cobrança ${escopo==='semana' ? 'nesta semana' : 'pendente'} com os filtros atuais. 🎉</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="12" class="empty-state">Nenhuma cobrança ${escopo==='mes' ? 'neste mês' : 'pendente'} com os filtros atuais. 🎉</td></tr>`;
     window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = [];
     return;
   }
 
+  // Agrupar por data de vencimento (só os dias que têm cobrança)
+  const grupos = {};
+  const semData = [];
+  list.forEach(p => {
+    if (!p.venc) { semData.push(p); return; }
+    (grupos[p.venc] = grupos[p.venc] || []).push(p);
+  });
+  const porNome = (a,b) => getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente));
+  const datas = Object.keys(grupos).sort();
+
   let html = '';
   let desenhadas = 0;
-  ordem.forEach(i => {
-    const itens = grupos[i];
-    const dataDia = (escopo === 'semana') ? _addDias(ini, i) : null;
+  datas.forEach(data => {
+    const itens = grupos[data].sort(porNome);
     const somaDia = itens.reduce((s,p) => s + saldoDe(p), 0);
+    const diaSem = COB_DIAS[(_dataLocal(data).getDay() + 6) % 7];
     html += `<tr class="cob-dia"><td colspan="12">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="cob-dia-nome">${COB_DIAS[i]}${dataDia ? ' · ' + fmtDate(dataDia) : ''}</span>
-        <span class="cob-dia-meta">${itens.length ? itens.length + ' cobrança(s) · ' + fmtBRL(somaDia) : ''}</span>
+        <span class="cob-dia-nome">${fmtDate(data)} · ${diaSem}</span>
+        <span class="cob-dia-meta">${itens.length} cobrança(s) · ${fmtBRL(somaDia)}</span>
       </div></td></tr>`;
-    if (!itens.length) {
-      html += `<tr class="cob-dia-vazio"><td colspan="12">— sem cobranças neste dia —</td></tr>`;
-      return;
-    }
     itens.forEach(p => { if (desenhadas++ < LIMITE_LINHAS) html += _linhaCobranca(p, hoje); });
   });
-  if (grupos.sem.length) {
+  if (semData.length) {
     html += `<tr class="cob-dia"><td colspan="12"><span class="cob-dia-nome">Sem data prevista</span></td></tr>`;
-    grupos.sem.forEach(p => { if (desenhadas++ < LIMITE_LINHAS) html += _linhaCobranca(p, hoje); });
+    semData.sort(porNome).forEach(p => { if (desenhadas++ < LIMITE_LINHAS) html += _linhaCobranca(p, hoje); });
   }
   if (desenhadas > LIMITE_LINHAS) {
     html += `<tr><td colspan="12" style="text-align:center;padding:14px;background:#fffbeb;color:#92400e;font-size:12px">

@@ -867,6 +867,15 @@ tr.cob-dia-vazio > td {
 }
 .aviso-atraso-cli:last-child { border-bottom:none; }
 
+/* Item do menu Cobrança Advogado — fundo roxo para chamar atenção */
+.nav-sub-item.nav-advogado { background:#6d28d9; color:#fff; font-weight:700; }
+.nav-sub-item.nav-advogado svg { stroke:#fff; }
+.nav-sub-item.nav-advogado:hover { background:#5b21b6; color:#fff; }
+.nav-sub-item.nav-advogado.active { background:#4c1d95; color:#fff; box-shadow:inset 3px 0 0 #c4b5fd; }
+/* Botão de envio para advogado */
+.btn-advogado { background:#6d28d9 !important; color:#fff !important; border:none !important; }
+.btn-advogado:hover { background:#5b21b6 !important; }
+.cob-adv-tag { display:inline-block; background:#ede9fe; color:#5b21b6; border-radius:6px; padding:2px 7px; font-size:11px; font-weight:700; }
 /* Botão e modais do WhatsApp na Cobrança */
 .btn-whats { background:#25d366 !important; color:#fff !important; border:none !important; }
 .btn-whats:hover { background:#1ebe5b !important; }
@@ -1092,6 +1101,10 @@ tr.cob-dia-vazio > td {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5a2 2 0 0 1 2-2h3.28a1 1 0 0 1 .95.68l1.5 4.5a1 1 0 0 1-.5 1.2l-2.26 1.1a12 12 0 0 0 5.55 5.55l1.1-2.26a1 1 0 0 1 1.2-.5l4.5 1.5a1 1 0 0 1 .68.95V19a2 2 0 0 1-2 2A16 16 0 0 1 3 5z"/></svg>
           Cobrança
           <span class="nav-destaque-pino"></span>
+        </div>
+        <div class="nav-sub-item nav-advogado" onclick="showPage('cobranca-advogado')" id="nav-cobranca-advogado">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3.5 3.5 0 0 0 6 0z"/><path d="M19 7l-3 7a3.5 3.5 0 0 0 6 0z"/><path d="M8 21h8"/></svg>
+          Cobrança Advogado
         </div>
         <div class="nav-sub-item" onclick="showPage('recebido')" id="nav-recebido">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -1590,6 +1603,9 @@ tr.cob-dia-vazio > td {
       <div class="card">
         <div class="card-title">Novo Cliente</div>
         <div class="grid3">
+          <div class="form-group"><label>Código do Cliente</label><input id="cl-codigo" type="text" placeholder="Ex: 2064" /></div>
+        </div>
+        <div class="grid3">
           <div class="form-group"><label>Nome / Razão Social *</label><input id="cl-nome" type="text" placeholder="Nome do cliente" /></div>
           <div class="form-group"><label>CPF / CNPJ</label><input id="cl-cnpj" type="text" placeholder="000.000.000-00" /></div>
           <div class="form-group"><label>Contato</label><input id="cl-contato" type="text" placeholder="Nome do contato" /></div>
@@ -1615,8 +1631,8 @@ tr.cob-dia-vazio > td {
       <div class="card" style="margin-top:16px">
         <div class="card-title">Clientes Cadastrados</div>
         <div class="table-scroll"><table><thead><tr id="th-clientes-row">
-          <th>Nome</th><th>CPF/CNPJ</th><th>Contato</th><th>Telefone</th><th>Categoria</th><th>Ações</th>
-        </tr></thead><tbody id="tb-clientes"><tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado.</td></tr></tbody></table></div>
+          <th>Código</th><th>Nome</th><th>CPF/CNPJ</th><th>Contato</th><th>Telefone</th><th>Categoria</th><th>Ações</th>
+        </tr></thead><tbody id="tb-clientes"><tr><td colspan="7" class="empty-state">Nenhum cliente cadastrado.</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -1725,15 +1741,18 @@ tr.cob-dia-vazio > td {
           <div class="form-group"><label>Valor Máx. (R$)</label>
             <input type="number" step="0.01" id="lrf-valor-max" onchange="renderLancReceber()" placeholder="0,00" style="width:120px" />
           </div>
+          <div class="form-group"><label>Código / Nome do Cliente</label>
+            <input type="text" id="lrf-cli-busca" oninput="renderLancReceber()" placeholder="Ex.: 2064 ou Krato" style="width:190px" />
+          </div>
           <div class="form-group"><label>NF</label>
             <input type="text" id="lrf-nf" oninput="renderLancReceber()" placeholder="Nº da NF" style="width:120px" />
           </div>
           <div style="align-self:flex-end"><button class="btn btn-secondary" onclick="clearLancReceberFiltros()">Limpar</button></div>
         </div>
         <div class="table-scroll"><table><thead><tr id="th-lancreceber-row">
-          <th>Data da Competência</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Valor</th><th>Parcelas</th>
+          <th>Data da Competência</th><th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Valor</th><th>Parcelas</th>
           <th>Prev. Receb.</th><th>NF</th><th>Financeiro</th><th>Recebido</th><th>Ações</th>
-        </tr></thead><tbody id="tb-lancreceber"><tr><td colspan="11" class="empty-state">Nenhum lançamento registrado.</td></tr></tbody></table></div>
+        </tr></thead><tbody id="tb-lancreceber"><tr><td colspan="12" class="empty-state">Nenhum lançamento registrado.</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -1804,6 +1823,9 @@ tr.cob-dia-vazio > td {
           <div class="form-group"><label>Forma de Recebimento</label>
             <select id="arf-tipo-pag" onchange="renderAReceber()"><option value="">Todas</option></select>
           </div>
+          <div class="form-group"><label>Código / Nome do Cliente</label>
+            <input type="text" id="arf-cli-busca" oninput="renderAReceber()" placeholder="Ex.: 2064 ou Krato" style="width:190px" />
+          </div>
           <div class="form-group"><label>NF</label>
             <input type="text" id="arf-nf" oninput="renderAReceber()" placeholder="Nº da NF" style="width:120px" />
           </div>
@@ -1814,8 +1836,8 @@ tr.cob-dia-vazio > td {
           </div>
         </div>
         <div class="table-scroll"><table><thead><tr id="th-areceber-row">
-          <th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Juros</th><th>Total c/ Juros</th><th>Dt. Competência</th><th>Vencimento</th><th>Situação</th><th>Forma Receb.</th><th>NF</th><th>Financeiro</th><th>Ações</th>
-        </tr></thead><tbody id="tb-areceber"><tr><td colspan="14" class="empty-state">Nenhuma parcela em aberto.</td></tr></tbody></table></div>
+          <th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Juros</th><th>Total c/ Juros</th><th>Dt. Competência</th><th>Vencimento</th><th>Situação</th><th>Forma Receb.</th><th>NF</th><th>Financeiro</th><th>Ações</th>
+        </tr></thead><tbody id="tb-areceber"><tr><td colspan="15" class="empty-state">Nenhuma parcela em aberto.</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -1990,6 +2012,51 @@ tr.cob-dia-vazio > td {
       </div>
     </div>
 
+    <!-- ══ COBRANÇA ADVOGADO ══ -->
+    <div class="page" id="page-cobranca-advogado">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Cobrança Advogado</div>
+          <div class="page-sub" style="margin-bottom:0">Parcelas enviadas para cobrança com advogado · acompanhamento até o recebimento</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-pdf" onclick="imprimirPagina('cobranca-advogado')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> PDF</button>
+        </div>
+      </div>
+
+      <div id="cobadv-kpis" class="grid4" style="margin-bottom:20px;"></div>
+
+      <div class="card">
+        <div class="card-title">Filtros</div>
+        <div class="filter-row">
+          <div class="form-group"><label>Ano</label>
+            <select id="cobadv-ano" onchange="renderCobrancaAdvogado()" style="width:110px"></select>
+          </div>
+          <div class="form-group"><label>Mês</label>
+            <select id="cobadv-mes" onchange="renderCobrancaAdvogado()" style="width:160px"></select>
+          </div>
+          <div class="form-group"><label>Advogado / Escritório</label>
+            <select id="cobadv-adv" onchange="renderCobrancaAdvogado()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group"><label>Cliente</label>
+            <select id="cobadv-cliente" onchange="renderCobrancaAdvogado()"><option value="">Todos</option></select>
+          </div>
+          <div class="form-group"><label>Buscar (código / cliente / NF / produto)</label>
+            <input type="text" id="cobadv-busca" oninput="renderCobrancaAdvogado()" placeholder="Digite para filtrar..." style="width:240px" />
+          </div>
+          <div style="align-self:flex-end"><button class="btn btn-secondary" onclick="clearCobrancaAdvogadoFiltros()">Limpar</button></div>
+        </div>
+        <div class="table-scroll" style="max-height:none">
+          <table><thead><tr>
+            <th>Cliente</th><th>Produto</th><th>Parcela</th><th>Valor</th><th>Recebido</th><th>Saldo</th><th>Juros</th>
+            <th>Vencimento</th><th>Atraso</th><th>Advogado</th><th>Enviado em</th><th>Follow-up</th><th>Ações</th>
+          </tr></thead><tbody id="tb-cobranca-advogado">
+            <tr><td colspan="13" class="empty-state">Nenhuma parcela com advogado.</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ RECEBIDO ══ -->
     <div class="page" id="page-recebido">
       <div class="page-header"><div><div class="page-title">Contas Recebidas</div><div class="page-sub" style="margin-bottom:0">Histórico de recebimentos realizados</div></div><div style="display:flex;gap:8px"><button class="btn-pdf" onclick="abrirPdfDia('recebido')" style="background:#0f766e">📅 PDF por Dia</button><button class="btn-pdf" onclick="imprimirPagina('recebido')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> PDF</button></div></div>
@@ -2027,14 +2094,17 @@ tr.cob-dia-vazio > td {
           <div class="form-group"><label>Forma de Recebimento</label>
             <select id="recf-tipo-pag" onchange="renderRecebido()"><option value="">Todas</option></select>
           </div>
+          <div class="form-group"><label>Código / Nome do Cliente</label>
+            <input type="text" id="recf-cli-busca" oninput="renderRecebido()" placeholder="Ex.: 2064 ou Krato" style="width:190px" />
+          </div>
           <div class="form-group"><label>NF</label>
             <input type="text" id="recf-nf" oninput="renderRecebido()" placeholder="Nº da NF" style="width:120px" />
           </div>
           <div style="align-self:flex-end"><button class="btn btn-secondary" onclick="clearRecebidoFiltros()">Limpar</button></div>
         </div>
         <div class="table-scroll"><table><thead><tr id="th-recebido-row">
-          <th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Vencimento</th><th>Dt. Competência</th><th>Dt. Recebimento</th><th>Forma Receb.</th><th>NF</th><th>Financeiro</th><th>Ações</th>
-        </tr></thead><tbody id="tb-recebido"><tr><td colspan="12" class="empty-state">Nenhum recebimento registrado.</td></tr></tbody></table></div>
+          <th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Vencimento</th><th>Dt. Competência</th><th>Dt. Recebimento</th><th>Forma Receb.</th><th>NF</th><th>Financeiro</th><th>Ações</th>
+        </tr></thead><tbody id="tb-recebido"><tr><td colspan="13" class="empty-state">Nenhum recebimento registrado.</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -3006,6 +3076,9 @@ tr.cob-dia-vazio > td {
     <div class="modal-title">Editar Cliente</div>
     <input type="hidden" id="edit-cliente-id" />
     <div class="grid3">
+      <div class="form-group"><label>Código do Cliente</label><input id="ecl-codigo" type="text" /></div>
+    </div>
+    <div class="grid3">
       <div class="form-group"><label>Nome / Razão Social</label><input id="ecl-nome" type="text" /></div>
       <div class="form-group"><label>CPF / CNPJ</label><input id="ecl-cnpj" type="text" /></div>
       <div class="form-group"><label>Contato</label><input id="ecl-contato" type="text" /></div>
@@ -3295,6 +3368,35 @@ tr.cob-dia-vazio > td {
 
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-cob-baixa')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: ENVIAR PARA COBRANÇA COM ADVOGADO ══ -->
+<div class="modal-overlay" id="modal-cob-advogado">
+  <div class="modal" style="width:560px;">
+    <div class="modal-title">⚖️ Enviar para cobrança com advogado</div>
+    <div id="cob-adv-info" style="font-size:13px;color:#57534e;margin-bottom:16px;"></div>
+    <div class="grid2">
+      <div class="form-group"><label>Advogado / Escritório *</label>
+        <input id="cob-adv-nome" type="text" list="cob-adv-lista" placeholder="Nome do advogado ou escritório" />
+        <datalist id="cob-adv-lista"></datalist>
+      </div>
+      <div class="form-group"><label>Data de envio *</label><input id="cob-adv-data" type="date" /></div>
+    </div>
+    <div class="form-group"><label>Observação</label>
+      <textarea id="cob-adv-obs" rows="3" placeholder="Ex.: enviado após 3 tentativas de contato sem retorno"></textarea>
+    </div>
+    <label id="cob-adv-todas-wrap" style="display:none;align-items:center;gap:7px;font-size:13px;cursor:pointer;margin-bottom:10px;">
+      <input type="checkbox" id="cob-adv-todas" style="width:auto;margin:0" />
+      <span id="cob-adv-todas-txt"></span>
+    </label>
+    <p style="font-size:12px;color:#5b21b6;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 10px;">
+      A parcela sai da agenda de Cobrança e passa para a tela <b>Cobrança Advogado</b>. Ela continua em Contas a Receber até ser paga.
+    </p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cob-advogado')">Cancelar</button>
+      <button class="btn btn-advogado" onclick="confirmarEnviarAdvogado()">⚖️ Enviar para advogado</button>
     </div>
   </div>
 </div>
@@ -4080,6 +4182,7 @@ const PAGES_CONFIG = [
   { id:'lancreceber',       label:'Lançamentos (Venda)', grupo:'receber' },
   { id:'areceber',          label:'Contas a Receber',    grupo:'receber' },
   { id:'cobranca',          label:'Cobrança',            grupo:'receber' },
+  { id:'cobranca-advogado', label:'Cobrança Advogado',   grupo:'receber' },
   { id:'auditoria',         label:'Auditoria',           grupo:'admin' },
   { id:'recebido',          label:'Contas Recebidas',    grupo:'receber' },
   { id:'pedidoscancelados', label:'Pedidos Cancelados',  grupo:'receber' },
@@ -4640,7 +4743,7 @@ async function loadAllData() {
       if (!chave) return;
       let obj = null;
       try { obj = JSON.parse(c.value); } catch(e) { obj = null; }
-      if (obj) cobrancaDados[chave] = { followups: obj.followups || [], baixas: obj.baixas || [] };
+      if (obj) cobrancaDados[chave] = { followups: obj.followups || [], baixas: obj.baixas || [], advogado: obj.advogado || null };
     });
     // Histórico de auditoria
     auditLog = [];
@@ -4886,6 +4989,7 @@ function showPage(p) {
   if (p === 'lancreceber')    renderLancReceber();
   if (p === 'areceber')       { renderAReceber(); avisoAtrasoAoEntrar(); }
   if (p === 'cobranca')       { renderCobranca(); avisoAtrasoAoEntrar(); }
+  if (p === 'cobranca-advogado') renderCobrancaAdvogado();
   if (p === 'auditoria')      renderAuditoria(true);
   if (p === 'recebido')       renderRecebido();
   if (p === 'pedidoscancelados') renderPedidosCancelados();
@@ -4925,6 +5029,7 @@ function renderPaginaAtual() {
   if (p === 'lancreceber')    renderLancReceber();
   if (p === 'areceber')       { renderAReceber(); avisoAtrasoAoEntrar(); }
   if (p === 'cobranca')       { renderCobranca(); avisoAtrasoAoEntrar(); }
+  if (p === 'cobranca-advogado') renderCobrancaAdvogado();
   if (p === 'auditoria')      renderAuditoria(true);
   if (p === 'recebido')       renderRecebido();
   if (p === 'pedidoscancelados') renderPedidosCancelados();
@@ -9209,18 +9314,38 @@ function getClienteDocTipo(id){
   const nome = (c && c.nome) || String(id || '');
   return _RE_PJ_NOME.test(nome) ? 'cnpj' : 'cpf';
 }
+// Exibição padrão em tabelas, filtros e relatórios: "código - nome"
+function clienteLabel(c) {
+  if (!c) return '—';
+  return c.codigo ? `${c.codigo} - ${c.nome}` : (c.nome || '—');
+}
 function getClienteNome(id) {
   const f = _lookup('cli', db.clientes).get(id);
-  return f ? f.nome : (id||'—');
+  return f ? clienteLabel(f) : (id||'—');
+}
+// Só o nome, sem código (mensagens ao cliente e comparação de nomes)
+function getClienteCodigo(id) {
+  const f = _lookup('cli', db.clientes).get(id);
+  return (f && f.codigo) ? String(f.codigo) : '';
+}
+// Filtro por código ou nome do cliente (texto livre)
+function clienteBate(id, termo) {
+  if (!termo) return true;
+  const t = normText(termo);
+  return normText(getClienteCodigo(id)).includes(t) || normText(getClienteNomePuro(id)).includes(t);
+}
+function getClienteNomePuro(id) {
+  const f = _lookup('cli', db.clientes).get(id);
+  return f ? (f.nome || '') : (id||'—');
 }
 function getProdVendaNome(id) {
   const p = _lookup('pv', db.prodvenda).get(id);
   return p ? p.nome : (id||'—');
 }
 function populateClienteSelects() {
-  const opts = '<option value="">Selecione...</option>' + db.clientes.map(cl=>`<option value="${cl.id}">${cl.nome}</option>`).join('');
+  const opts = '<option value="">Selecione...</option>' + db.clientes.map(cl=>`<option value="${cl.id}">${clienteLabel(cl)}</option>`).join('');
   ['lr-cliente','elr-cliente'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=opts; });
-  const filterOpts = '<option value="">Todos</option>' + db.clientes.map(cl=>`<option value="${cl.id}">${cl.nome}</option>`).join('');
+  const filterOpts = '<option value="">Todos</option>' + db.clientes.map(cl=>`<option value="${cl.id}">${clienteLabel(cl)}</option>`).join('');
   ['lrf-cliente','arf-cliente','recf-cliente','cob-cliente'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=filterOpts; });
 }
 function populateProdVendaSelects() {
@@ -9285,7 +9410,11 @@ function _buildParcelasReceber() {
 async function saveCliente() {
   const nome = document.getElementById('cl-nome').value.trim();
   if(!nome){ alert('Informe o nome do cliente.'); return; }
-  const rec = { id:uid(), nome,
+  const codigo = document.getElementById('cl-codigo').value.trim();
+  if (codigo && db.clientes.some(c => (c.codigo||'') === codigo)) {
+    alert('Já existe um cliente com o código ' + codigo + '.'); return;
+  }
+  const rec = { id:uid(), codigo, nome,
     cnpj: document.getElementById('cl-cnpj').value,
     contato: document.getElementById('cl-contato').value,
     tel: document.getElementById('cl-tel').value,
@@ -9298,12 +9427,13 @@ async function saveCliente() {
   clearCliente(); renderClientes(); populateClienteSelects(); fecharFormModalSeAberto('form-cli');
 }
 function clearCliente() {
-  ['cl-nome','cl-cnpj','cl-contato','cl-tel','cl-email','cl-obs'].forEach(id=>document.getElementById(id).value='');
+  ['cl-codigo','cl-nome','cl-cnpj','cl-contato','cl-tel','cl-email','cl-obs'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cl-cat').value='';
 }
 function renderClientes() {
   const tb=document.getElementById('tb-clientes');
   const colsCli = [
+    { key:'codigo', label:'Código', get:c=>c.codigo||null },
     { key:'nome', label:'Nome', get:c=>c.nome },
     { key:'cnpj', label:'CPF/CNPJ', get:c=>c.cnpj||null },
     { key:'contato', label:'Contato', get:c=>c.contato||null },
@@ -9312,8 +9442,9 @@ function renderClientes() {
     { key:'acoes', label:'Ações', get:()=>'', noFilter:true }
   ];
   const listCli = efMount('clientes','th-clientes-row',colsCli,db.clientes,renderClientes);
-  if(!listCli.length){ tb.innerHTML='<tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado.</td></tr>'; return; }
+  if(!listCli.length){ tb.innerHTML='<tr><td colspan="7" class="empty-state">Nenhum cliente cadastrado.</td></tr>'; return; }
   tb.innerHTML=listCli.map(cl=>`<tr>
+    <td style="font-family:DM Mono,monospace;font-size:12px">${cl.codigo||'—'}</td>
     <td><b>${cl.nome}</b></td>
     <td style="font-family:DM Mono,monospace;font-size:12px">${cl.cnpj||'—'}</td>
     <td>${cl.contato||'—'}</td><td>${cl.tel||'—'}</td>
@@ -9326,6 +9457,7 @@ function renderClientes() {
 function editCliente(id) {
   const cl=db.clientes.find(x=>x.id===id); if(!cl) return;
   document.getElementById('edit-cliente-id').value=id;
+  document.getElementById('ecl-codigo').value=cl.codigo||'';
   document.getElementById('ecl-nome').value=cl.nome;
   document.getElementById('ecl-cnpj').value=cl.cnpj||'';
   document.getElementById('ecl-contato').value=cl.contato||'';
@@ -9338,6 +9470,11 @@ function editCliente(id) {
 async function updateCliente() {
   const id=document.getElementById('edit-cliente-id').value;
   const cl=db.clientes.find(x=>x.id===id); if(!cl) return;
+  const novoCodigo=document.getElementById('ecl-codigo').value.trim();
+  if (novoCodigo && db.clientes.some(c => c.id !== id && (c.codigo||'') === novoCodigo)) {
+    alert('Já existe outro cliente com o código ' + novoCodigo + '.'); return;
+  }
+  cl.codigo=novoCodigo;
   cl.nome=document.getElementById('ecl-nome').value;
   cl.cnpj=document.getElementById('ecl-cnpj').value;
   cl.contato=document.getElementById('ecl-contato').value;
@@ -9345,7 +9482,7 @@ async function updateCliente() {
   cl.email=document.getElementById('ecl-email').value;
   cl.cat=document.getElementById('ecl-cat').value;
   cl.obs=document.getElementById('ecl-obs').value;
-  await sbFetch('clientes','PATCH',{nome:cl.nome,cnpj:cl.cnpj,contato:cl.contato,tel:cl.tel,email:cl.email,cat:cl.cat,obs:cl.obs},`?id=eq.${id}`);
+  await sbFetch('clientes','PATCH',{codigo:cl.codigo,nome:cl.nome,cnpj:cl.cnpj,contato:cl.contato,tel:cl.tel,email:cl.email,cat:cl.cat,obs:cl.obs},`?id=eq.${id}`);
   closeModal('modal-cliente'); renderClientes(); populateClienteSelects();
 }
 async function deleteCliente(id) {
@@ -9526,13 +9663,15 @@ function renderLancReceber() {
     if(!isNaN(valorMin) && (l.valor||0) < valorMin) return false;
     if(!isNaN(valorMax) && (l.valor||0) > valorMax) return false;
     if(nfLR && !String(l.nf||'').toLowerCase().includes(nfLR)) return false;
+    if(!clienteBate(l.cliente, (document.getElementById('lrf-cli-busca')||{}).value||'')) return false;
     if(tipoDocLR && getClienteDocTipo(l.cliente) !== tipoDocLR) return false;
     return true;
   });
   const _catDeVenda = l => l.cat_dre || (l.prod ? ((db.prodvenda.find(x=>x.id===l.prod)||{}).cat) : null);
   const colsLR = [
     { key:'dtvenda', label:'Data da Competência', get:l=>l.dtvenda||l.dtcompra, display:l=>fmtDate(l.dtvenda||l.dtcompra) },
-    { key:'cliente', label:'Cliente', get:l=>getClienteNome(l.cliente) },
+    { key:'codcli', label:'Código', get:l=>getClienteCodigo(l.cliente)||null },
+    { key:'cliente', label:'Cliente', get:l=>getClienteNomePuro(l.cliente) },
     { key:'prod', label:'Produto', get:l=>l.prod?getProdVendaNome(l.prod):null },
     { key:'cat', label:'Categoria', get:l=>{ const c=_catDeVenda(l); return c?getDreCatNome(c):null; } },
     { key:'valor', label:'Valor', get:l=>l.valor||0, display:l=>fmtBRL(l.valor) },
@@ -9545,8 +9684,8 @@ function renderLancReceber() {
   ];
   list = efMount('lancreceber','th-lancreceber-row',colsLR,list,renderLancReceber);
   window._pdfLists = window._pdfLists || {}; window._pdfLists.lancreceber = list.slice();
-  if(!list.length){ tb.innerHTML='<tr><td colspan="11" class="empty-state">Nenhum lançamento encontrado.</td></tr>'; return; }
-  const _c = _cortarLista(list, 11);
+  if(!list.length){ tb.innerHTML='<tr><td colspan="12" class="empty-state">Nenhum lançamento encontrado.</td></tr>'; return; }
+  const _c = _cortarLista(list, 12);
   tb.innerHTML = _c.aviso + _c.itens.map(l=>{
     const finBadge=l.financeiro==='sim'?'<span class="badge badge-green">Sim</span>':'<span class="badge badge-red">Não</span>';
     const recBadge=l.recebido==='sim'?'<span class="badge badge-green">Recebido</span>':'<span class="badge badge-yellow">Pendente</span>';
@@ -9555,7 +9694,8 @@ function renderLancReceber() {
     const catCell = catId ? `<span class="badge badge-blue">${getDreCatNome(catId)}</span>` : '<span style="color:#d6d3d1;font-size:12px">—</span>';
     return `<tr>
       <td>${fmtDate(l.dtvenda||l.dtcompra)}</td>
-      <td>${getClienteNome(l.cliente)}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${getClienteCodigo(l.cliente)||'—'}</td>
+      <td>${esc(getClienteNomePuro(l.cliente))}</td>
       <td>${l.prod?getProdVendaNome(l.prod):'—'}</td>
       <td>${catCell}</td>
       <td style="font-family:DM Mono,monospace">${fmtBRL(l.valor)}</td>
@@ -9572,7 +9712,7 @@ function renderLancReceber() {
   }).join('');
 }
 function clearLancReceberFiltros() {
-  ['lrf-mes','lrf-ano','lrf-cliente','lrf-recebido','lrf-categoria','lrf-data','lrf-data-de','lrf-data-ate','lrf-valor-min','lrf-valor-max','lrf-nf','lrf-tipodoc'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['lrf-mes','lrf-ano','lrf-cliente','lrf-recebido','lrf-categoria','lrf-data','lrf-data-de','lrf-data-ate','lrf-valor-min','lrf-valor-max','lrf-nf','lrf-tipodoc','lrf-cli-busca'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const tipoDataEl = document.getElementById('lrf-tipo-data'); if (tipoDataEl) tipoDataEl.value = 'venda';
   renderLancReceber();
 }
@@ -9591,7 +9731,7 @@ function editLancReceber(id) {
   const elrBanco = document.getElementById('elr-banco');
   if (elrBanco) elrBanco.value = l.banco || '';
   const ec=document.getElementById('elr-cliente');
-  ec.innerHTML='<option value="">Selecione...</option>'+db.clientes.map(cl=>`<option value="${cl.id}">${cl.nome}</option>`).join('');
+  ec.innerHTML='<option value="">Selecione...</option>'+db.clientes.map(cl=>`<option value="${cl.id}">${clienteLabel(cl)}</option>`).join('');
   ec.value=l.cliente||'';
   const ep=document.getElementById('elr-prod');
   ep.innerHTML='<option value="">Selecione...</option>'+db.prodvenda.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
@@ -9769,11 +9909,13 @@ function renderAReceber() {
       else if (p.tipoPag !== tipoRecF) return false;
     }
     if(nfAR && !String(p.nf||'').toLowerCase().includes(nfAR)) return false;
+    if(!clienteBate(p.cliente, (document.getElementById('arf-cli-busca')||{}).value||'')) return false;
     return true;
   });
   // Colunas para o filtro/ordenação estilo Excel no cabeçalho da tabela
   const colsAReceber = [
-    { key:'cliente', label:'Cliente', get:p=>getClienteNome(p.cliente) },
+    { key:'codcli', label:'Código', get:p=>getClienteCodigo(p.cliente)||null },
+    { key:'cliente', label:'Cliente', get:p=>getClienteNomePuro(p.cliente) },
     { key:'prod', label:'Produto', get:p=>p.prod?getProdVendaNome(p.prod):null },
     { key:'categoria', label:'Categoria', get:p=>p.catId?getDfcCatNome(p.catId):null },
     { key:'parcela', label:'Parcela', get:p=>p.parcIdx+(p.totalParc/1000), display:p=>`${p.parcIdx}/${p.totalParc}` },
@@ -9801,10 +9943,10 @@ function renderAReceber() {
     <div class="card kpi"><div class="kpi-val" style="color:#16a34a">${fmtBRL(total)}</div><div class="kpi-lbl">Total a receber</div></div>
     <div class="card kpi"><div class="kpi-val" style="color:#dc2626">${fmtBRL(totalComJuros)}</div><div class="kpi-lbl">Total c/ Juros</div></div>
     <div class="card kpi"><div class="kpi-val" style="color:#d97706">${vencidas}</div><div class="kpi-lbl">Vencidas</div></div>`;
-  if(!list.length){ tb.innerHTML='<tr><td colspan="14" class="empty-state">Nenhuma parcela em aberto.</td></tr>'; return; }
+  if(!list.length){ tb.innerHTML='<tr><td colspan="15" class="empty-state">Nenhuma parcela em aberto.</td></tr>'; return; }
   if(!_efState('areceber').sortKey) list.sort((a,b)=>(a.venc||'9999').localeCompare(b.venc||'9999'));
   window._pdfLists = window._pdfLists || {}; window._pdfLists.areceber = list.slice();
-  const _c = _cortarLista(list, 14);
+  const _c = _cortarLista(list, 15);
   tb.innerHTML = _c.aviso + _c.itens.map(p=>{
     const sit=situacaoParcela(p.venc);
     const finBadge=p.financeiro==='sim'?'<span class="badge badge-green">Sim</span>':'<span class="badge badge-red">Não</span>';
@@ -9818,7 +9960,8 @@ function renderAReceber() {
       ? `<strong style="color:#dc2626;font-family:DM Mono,monospace">${fmtBRL(totalComJuros)}</strong>`
       : `<span style="font-family:DM Mono,monospace">${fmtBRL(p.valParc)}</span>`;
     return `<tr>
-      <td>${getClienteNome(p.cliente)}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${getClienteCodigo(p.cliente)||'—'}</td>
+      <td>${esc(getClienteNomePuro(p.cliente))}</td>
       <td>${p.prod?getProdVendaNome(p.prod):'—'}</td>
       <td>${p.catId?'<span class="badge badge-blue">'+getDfcCatNome(p.catId)+'</span>':'<span style="color:#a8a29e">—</span>'}</td>
       <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
@@ -9847,7 +9990,7 @@ function _parcialAReceber(p) {
   return `<br><small style="color:#16a34a;font-size:11px">recebido ${fmtBRL(pago)} · saldo ${fmtBRL(saldo)}</small>`;
 }
 function clearAReceberFiltros() {
-  ['arf-mes','arf-ano','arf-cliente','arf-categoria','arf-data','arf-data-de','arf-data-ate','arf-valor-min','arf-valor-max','arf-situacao','arf-tipo-pag','arf-nf'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['arf-mes','arf-ano','arf-cliente','arf-categoria','arf-data','arf-data-de','arf-data-ate','arf-valor-min','arf-valor-max','arf-situacao','arf-tipo-pag','arf-nf','arf-cli-busca'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   renderAReceber();
 }
 function marcarRecebido(id, parcIdx) {
@@ -9957,6 +10100,7 @@ function renderRecebido() {
       else if (p.tipoPag !== tipoRecFR) return false;
     }
     if(nfREC && !String(p.nf||'').toLowerCase().includes(nfREC)) return false;
+    if(!clienteBate(p.cliente, (document.getElementById('recf-cli-busca')||{}).value||'')) return false;
     if(!dataVenc && !dataRec && !dataVenda) {
       const dateRef=p.venc||p.dtvenda;
       if(dateRef){
@@ -9976,7 +10120,8 @@ function renderRecebido() {
     <div class="card kpi"><div class="kpi-val">${totalRecRecebidos}</div><div class="kpi-lbl">Lançamentos quitados</div></div>
     <div class="card kpi"><div class="kpi-val">${totalEmAberto}</div><div class="kpi-lbl">Lançamentos em aberto</div></div>`;
   const colsRec = [
-    { key:'cliente', label:'Cliente', get:p=>getClienteNome(p.cliente) },
+    { key:'codcli', label:'Código', get:p=>getClienteCodigo(p.cliente)||null },
+    { key:'cliente', label:'Cliente', get:p=>getClienteNomePuro(p.cliente) },
     { key:'prod', label:'Produto', get:p=>p.prod?getProdVendaNome(p.prod):null },
     { key:'categoria', label:'Categoria', get:p=>p.catId?getDfcCatNome(p.catId):null },
     { key:'parcela', label:'Parcela', get:p=>p.parcIdx+(p.totalParc/1000), display:p=>`${p.parcIdx}/${p.totalParc}` },
@@ -9990,17 +10135,18 @@ function renderRecebido() {
     { key:'acoes', label:'Ações', get:()=>'', noFilter:true }
   ];
   list = efMount('recebido','th-recebido-row',colsRec,list,renderRecebido);
-  if(!list.length){ tb.innerHTML='<tr><td colspan="12" class="empty-state">Nenhum recebimento registrado.</td></tr>'; return; }
+  if(!list.length){ tb.innerHTML='<tr><td colspan="13" class="empty-state">Nenhum recebimento registrado.</td></tr>'; return; }
   if(!_efState('recebido').sortKey) list.sort((a,b)=>(b.venc||'').localeCompare(a.venc||''));
   window._pdfLists = window._pdfLists || {}; window._pdfLists.recebido = list.slice();
-  const _c = _cortarLista(list, 12);
+  const _c = _cortarLista(list, 13);
   tb.innerHTML = _c.aviso + _c.itens.map(p=>{
     const finBadge=p.financeiro==='sim'?'<span class="badge badge-green">Sim</span>':'<span class="badge badge-red">Não</span>';
     const dtrecCell=p.dtrecebido
       ?`<span style="font-family:DM Mono,monospace;font-size:12px;color:#16a34a;font-weight:600">${fmtDate(p.dtrecebido)}</span>`
       :'<span style="color:#a8a29e;font-size:12px">—</span>';
     return `<tr>
-      <td>${getClienteNome(p.cliente)}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${getClienteCodigo(p.cliente)||'—'}</td>
+      <td>${esc(getClienteNomePuro(p.cliente))}</td>
       <td>${p.prod?getProdVendaNome(p.prod):'—'}</td>
       <td>${p.catId?'<span class="badge badge-blue">'+getDfcCatNome(p.catId)+'</span>':'<span style="color:#a8a29e">—</span>'}</td>
       <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
@@ -10016,7 +10162,7 @@ function renderRecebido() {
   }).join('');
 }
 function clearRecebidoFiltros() {
-  ['recf-mes','recf-ano','recf-cliente','recf-categoria','recf-data-venc','recf-data-rec','recf-data-venda','recf-tipo-pag','recf-nf'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['recf-mes','recf-ano','recf-cliente','recf-categoria','recf-data-venc','recf-data-rec','recf-data-venda','recf-tipo-pag','recf-nf','recf-cli-busca'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   renderRecebido();
 }
 
@@ -12828,9 +12974,48 @@ function renderAnaliseFluxo() {
 }
 
 
+// ══════════════════════════════════════════════════════════════════════
+// MIGRAÇÃO ÚNICA: separa o código que estava no início do nome do cliente
+// Ex.: "2064 Krato Pneus LTDA" -> codigo "2064", nome "Krato Pneus LTDA".
+// Só age em clientes ainda sem código. Exige a coluna `codigo` na tabela
+// `clientes` do Supabase (ALTER TABLE clientes ADD COLUMN codigo text).
+// ══════════════════════════════════════════════════════════════════════
+const RE_COD_NOME = /^\s*(\d{1,8})(?:\s*[-–.]\s*|\s+)(\S.*)$/;
+async function migrarCodigoClientes() {
+  const alvos = db.clientes.filter(c => !c.codigo && RE_COD_NOME.test(c.nome || ''));
+  if (!alvos.length) return;
+  try { if (sessionStorage.getItem('nones_mig_codcli_falhou')) return; } catch(e) {}
+  showLoading(true);
+  _auditEmCurso = true;   // não gera um registro de auditoria por cliente
+  let ok = 0, falha = 0, semColuna = false;
+  try {
+    for (let i = 0; i < alvos.length; i += 10) {
+      const lote = alvos.slice(i, i + 10);
+      const res = await Promise.all(lote.map(c => {
+        const m = RE_COD_NOME.exec(c.nome);
+        return sbFetch('clientes', 'PATCH', { codigo: m[1], nome: m[2].trim() }, `?id=eq.${c.id}`)
+          .then(r => ({ c, m, r }));
+      }));
+      res.forEach(({ c, m, r }) => {
+        if (r) { c.codigo = m[1]; c.nome = formatarNome(limparTexto(m[2].trim())); ok++; }
+        else falha++;
+      });
+      if (i === 0 && ok === 0) { semColuna = true; break; }
+    }
+  } finally { _auditEmCurso = false; showLoading(false); }
+  bumpDbVer();
+  if (semColuna) {
+    try { sessionStorage.setItem('nones_mig_codcli_falhou', '1'); } catch(e) {}
+    alert('⚠️ Não foi possível separar o código do nome dos clientes.\n\nNo Supabase (SQL Editor) rode:\n\nALTER TABLE clientes ADD COLUMN IF NOT EXISTS codigo text;\n\nDepois recarregue o sistema.' + sbErroMsg());
+    return;
+  }
+  console.log(`[Clientes] Código separado do nome: ${ok} cliente(s)${falha ? `, ${falha} com erro` : ''}.`);
+}
+
 async function initApp() {
   await loadAllData();
   await cfSincronizarTodas();
+  await migrarCodigoClientes();
   populateYearSelects();
   populateDfcYearSelects();
   restaurarFiltrosDash();
@@ -13064,6 +13249,7 @@ function imprimirPagina(pagina) {
     'custos-fixos': 'Custos Fixos',
     areceber:    'Contas a Receber',
     cobranca:    'Cobrança — Clientes em Atraso',
+    'cobranca-advogado': 'Cobrança Advogado',
     auditoria:   'Auditoria — Histórico de Alterações',
     recebido:    'Contas Recebidas',
     pedidoscancelados: 'Pedidos Cancelados',
@@ -13076,6 +13262,7 @@ function imprimirPagina(pagina) {
     'custos-fixos': 'tb-custos-fixos',
     areceber:    'tb-areceber',
     cobranca:    'tb-cobranca',
+    'cobranca-advogado': 'tb-cobranca-advogado',
     auditoria:   'tb-auditoria',
     recebido:    'tb-recebido',
     pedidoscancelados: 'tb-pedidoscancelados',
@@ -13087,6 +13274,7 @@ function imprimirPagina(pagina) {
     'custos-fixos': 'cf-kpis',
     areceber: 'areceber-kpis',
     cobranca: 'cobranca-kpis',
+    'cobranca-advogado': 'cobadv-kpis',
     auditoria: 'auditoria-kpis',
     recebido: 'recebido-kpis',
     pedidoscancelados: 'pc-kpis',
@@ -13482,7 +13670,7 @@ function acharDuplicado(tipo, nomeRaw, matchId, isNovo, dataRef, valor) {
       const dataL = l.dtvenda || l.dtcompra || '';
       if(dataL !== dataRef) return false;
       if(!isNovo && matchId) return l.cliente === matchId;
-      return normText(getClienteNome(l.cliente)) === nomeNorm;
+      return normText(getClienteNomePuro(l.cliente)) === nomeNorm;
     });
   }
 }
@@ -13895,7 +14083,8 @@ function _pdfDiaColsDef(pagina) {
       { key:'financeiro',label:'Financeiro',     get:p=>p.financeiro==='sim'?'Sim':'Não' }
     ],
     areceber: [
-      { key:'cliente',   label:'Cliente',        get:p=>getClienteNome(p.cliente) },
+      { key:'codcli',    label:'Código',         get:p=>getClienteCodigo(p.cliente)||'—' },
+      { key:'cliente',   label:'Cliente',        get:p=>getClienteNomePuro(p.cliente) },
       { key:'prod',      label:'Produto',        get:p=>p.prod?getProdVendaNome(p.prod):'—' },
       { key:'parcela',   label:'Parcela',        get:p=>`${p.parcIdx}/${p.totalParc}` },
       { key:'valor',     label:'Valor Parcela',  get:p=>fmtBRL(p.valParc), num:true },
@@ -13909,7 +14098,8 @@ function _pdfDiaColsDef(pagina) {
       { key:'financeiro',label:'Financeiro',     get:p=>p.financeiro==='sim'?'Sim':'Não' }
     ],
     recebido: [
-      { key:'cliente',   label:'Cliente',        get:p=>getClienteNome(p.cliente) },
+      { key:'codcli',    label:'Código',         get:p=>getClienteCodigo(p.cliente)||'—' },
+      { key:'cliente',   label:'Cliente',        get:p=>getClienteNomePuro(p.cliente) },
       { key:'prod',      label:'Produto',        get:p=>p.prod?getProdVendaNome(p.prod):'—' },
       { key:'parcela',   label:'Parcela',        get:p=>`${p.parcIdx}/${p.totalParc}` },
       { key:'valor',     label:'Valor Parcela',  get:p=>fmtBRL(p.valParc), num:true },
@@ -13921,7 +14111,8 @@ function _pdfDiaColsDef(pagina) {
       { key:'financeiro',label:'Financeiro',     get:p=>p.financeiro==='sim'?'Sim':'Não' }
     ],
     lancreceber: [
-      { key:'cliente',   label:'Cliente',        get:p=>getClienteNome(p.cliente) },
+      { key:'codcli',    label:'Código',         get:p=>getClienteCodigo(p.cliente)||'—' },
+      { key:'cliente',   label:'Cliente',        get:p=>getClienteNomePuro(p.cliente) },
       { key:'prod',      label:'Produto',        get:p=>p.prod?getProdVendaNome(p.prod):'—' },
       { key:'cat',       label:'Categoria',      get:p=>{ const c=p.cat_dre||(p.prod?((db.prodvenda.find(x=>x.id===p.prod)||{}).cat):null); return c?getDreCatNome(c):'—'; } },
       { key:'valor',     label:'Valor',          get:p=>fmtBRL(p.valor), num:true },
@@ -14191,7 +14382,7 @@ function populateYearSelectsCancelados() {
 function populatePedidosCanceladosFiltros() {
   populateYearSelectsCancelados();
   const selCli = document.getElementById('pcf-cliente');
-  if (selCli) { const v = selCli.value; selCli.innerHTML = '<option value="">Todos</option>' + db.clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join(''); selCli.value = v; }
+  if (selCli) { const v = selCli.value; selCli.innerHTML = '<option value="">Todos</option>' + db.clientes.map(c => `<option value="${c.id}">${clienteLabel(c)}</option>`).join(''); selCli.value = v; }
   const selMot = document.getElementById('pcf-motivo');
   if (selMot) {
     const v = selMot.value;
@@ -14474,7 +14665,7 @@ function populateYearSelectsReposicao() {
 function populateReposicoesFiltros() {
   populateYearSelectsReposicao();
   const selCli = document.getElementById('rpf-cliente');
-  if (selCli) { const v = selCli.value; selCli.innerHTML = '<option value="">Todos</option>' + db.clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join(''); selCli.value = v; }
+  if (selCli) { const v = selCli.value; selCli.innerHTML = '<option value="">Todos</option>' + db.clientes.map(c => `<option value="${c.id}">${clienteLabel(c)}</option>`).join(''); selCli.value = v; }
   const selMot = document.getElementById('rpf-motivo');
   if (selMot) {
     const v = selMot.value;
@@ -15159,7 +15350,7 @@ function clearCustosFixosFiltros() {
 
 
 // ── Marcador de versão (para confirmar qual arquivo está no ar) ──
-window.APP_BUILD = '2026-10-07 · madeireira-nones · custo-fixo-recorrente';
+window.APP_BUILD = '2026-10-15b · madeireira-nones · codigo-cliente-receber';
 (function(){ var b = document.getElementById('sidebar-build'); if (b) b.textContent = 'build ' + window.APP_BUILD; })();
 
 // Fechar modais clicando fora
@@ -15231,7 +15422,7 @@ async function cobSalvar(lancId, parcIdx) {
   const reg = cobGet(lancId, parcIdx);
   const key = COB_PREFIX + _cobKey(lancId, parcIdx);
   await sbFetch('config', 'DELETE', null, `?key=eq.${encodeURIComponent(key)}`);
-  const vazio = !(reg.followups||[]).length && !(reg.baixas||[]).length;
+  const vazio = !(reg.followups||[]).length && !(reg.baixas||[]).length && !reg.advogado;
   if (vazio) return true;
   const ok = await sbFetch('config', 'POST', { id: uid(), key, value: JSON.stringify(reg) });
   return !!ok;
@@ -15251,8 +15442,8 @@ function popularMesesCobranca() {
     selAno.value = atual;
   }
   if (!selMes.options.length) {
-    selMes.innerHTML = meses.slice(1).map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
-    selMes.value = new Date().getMonth() + 1;
+    selMes.innerHTML = '<option value="0">Todos os meses</option>' + meses.slice(1).map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+    selMes.value = 0;   // padrão: ano atual, todos os meses
   }
 }
 function _garantirAnoCobranca(ano) {
@@ -15273,9 +15464,13 @@ function mesAtualCobranca() {
 }
 function navMesCobranca(passo) {
   let ano = parseInt(document.getElementById('cob-ano').value);
-  let mes = parseInt(document.getElementById('cob-mes').value) + passo;
-  if (mes < 1)  { mes = 12; ano -= 1; }
-  if (mes > 12) { mes = 1;  ano += 1; }
+  let mes = parseInt(document.getElementById('cob-mes').value) || 0;
+  if (mes === 0) { ano += passo; }   // "Todos os meses": as setas trocam o ano
+  else {
+    mes += passo;
+    if (mes < 1)  { mes = 12; ano -= 1; }
+    if (mes > 12) { mes = 1;  ano += 1; }
+  }
   _garantirAnoCobranca(ano);
   document.getElementById('cob-mes').value = mes;
   document.getElementById('cob-escopo').value = 'mes';
@@ -15285,17 +15480,21 @@ function clearCobrancaFiltros() {
   ['cob-cliente','cob-busca','cob-atraso-min','cob-tipodoc'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cob-situacao').value = 'atraso';
   document.getElementById('cob-escopo').value = 'mes';
+  document.getElementById('cob-ano').value = new Date().getFullYear();
+  document.getElementById('cob-mes').value = 0;
   renderCobranca();
 }
 
 // ── Render da agenda (por mês, agrupada por dia de vencimento) ────────
 function renderCobranca() {
+  renderCobrancaAdvogado();
   if (!paginaVisivel('cobranca')) return;
   popularMesesCobranca();
   _sincronizarQuitadasCobranca();
 
   const ano      = parseInt(document.getElementById('cob-ano').value) || new Date().getFullYear();
-  const mes      = parseInt(document.getElementById('cob-mes').value) || (new Date().getMonth() + 1);
+  const _mesSel  = parseInt(document.getElementById('cob-mes').value);
+  const mes      = isNaN(_mesSel) ? (new Date().getMonth() + 1) : _mesSel;   // 0 = todos os meses
   const escopo   = document.getElementById('cob-escopo').value || 'mes';
   const cliente  = document.getElementById('cob-cliente').value;
   const situacao = document.getElementById('cob-situacao').value || 'atraso';
@@ -15303,15 +15502,17 @@ function renderCobranca() {
   const atrasoMin = parseInt(document.getElementById('cob-atraso-min').value);
   const tipoDocCob = document.getElementById('cob-tipodoc') ? document.getElementById('cob-tipodoc').value : '';
 
-  const ini = `${ano}-${String(mes).padStart(2,'0')}-01`;
-  const fim = `${ano}-${String(mes).padStart(2,'0')}-${String(new Date(ano, mes, 0).getDate()).padStart(2,'0')}`;
+  const ini = mes === 0 ? `${ano}-01-01` : `${ano}-${String(mes).padStart(2,'0')}-01`;
+  const fim = mes === 0 ? `${ano}-12-31`
+    : `${ano}-${String(mes).padStart(2,'0')}-${String(new Date(ano, mes, 0).getDate()).padStart(2,'0')}`;
   document.getElementById('cob-periodo').textContent =
-    (escopo === 'mes') ? `${meses[mes]} de ${ano}` : 'Todas as pendências';
+    (escopo === 'mes') ? (mes === 0 ? `Todos os meses de ${ano}` : `${meses[mes]} de ${ano}`) : 'Todas as pendências';
 
   const hoje = today();
   const list = getParcelasReceber(false).filter(p => {
     if (cliente && p.cliente !== cliente) return false;
     if (tipoDocCob && getClienteDocTipo(p.cliente) !== tipoDocCob) return false;
+    if (_cobEmAdvogado(p.lancId, p.parcIdx)) return false;   // está com o advogado
     // Saldo zerado = parcela paga: nunca aparece na cobrança.
     if (p.valParc - cobTotalBaixas(p.lancId, p.parcIdx) <= 0.005) return false;
     if (situacao === 'atraso' && !(p.venc && p.venc < hoje)) return false;
@@ -15348,39 +15549,13 @@ function renderCobranca() {
     return;
   }
 
-  // Agrupar por data de vencimento (só os dias que têm cobrança)
-  const grupos = {};
-  const semData = [];
-  list.forEach(p => {
-    if (!p.venc) { semData.push(p); return; }
-    (grupos[p.venc] = grupos[p.venc] || []).push(p);
-  });
-  const porNome = (a,b) => getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente));
-  const datas = Object.keys(grupos).sort();
-
-  let html = '';
-  let desenhadas = 0;
-  datas.forEach(data => {
-    const itens = grupos[data].sort(porNome);
-    const somaDia = itens.reduce((s,p) => s + saldoDe(p), 0);
-    const diaSem = COB_DIAS[(_dataLocal(data).getDay() + 6) % 7];
-    html += `<tr class="cob-dia"><td colspan="12">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="cob-dia-nome">${fmtDate(data)} · ${diaSem}</span>
-        <span class="cob-dia-meta">${itens.length} cobrança(s) · ${fmtBRL(somaDia)}</span>
-      </div></td></tr>`;
-    itens.forEach(p => { if (desenhadas++ < LIMITE_LINHAS) html += _linhaCobranca(p, hoje); });
-  });
-  if (semData.length) {
-    html += `<tr class="cob-dia"><td colspan="12"><span class="cob-dia-nome">Sem data prevista</span></td></tr>`;
-    semData.sort(porNome).forEach(p => { if (desenhadas++ < LIMITE_LINHAS) html += _linhaCobranca(p, hoje); });
-  }
-  if (desenhadas > LIMITE_LINHAS) {
-    html += `<tr><td colspan="12" style="text-align:center;padding:14px;background:#fffbeb;color:#92400e;font-size:12px">
-      Mostrando as ${LIMITE_LINHAS} primeiras de <strong>${desenhadas}</strong> linhas. Use os filtros acima para refinar.</td></tr>`;
-  }
-  tb.innerHTML = html;
-  window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = list.slice();
+  // Lista corrida, ordenada por vencimento e depois por cliente
+  const porNome = (a,b) => getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente), 'pt-BR', { numeric: true });
+  const ordenada = list.slice().sort((a,b) =>
+    (a.venc || '9999-99-99').localeCompare(b.venc || '9999-99-99') || porNome(a,b));
+  const _c = _cortarLista(ordenada, 12);
+  tb.innerHTML = _c.aviso + _c.itens.map(p => _linhaCobranca(p, hoje)).join('');
+  window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = ordenada;
 }
 
 function _linhaCobranca(p, hoje) {
@@ -15416,6 +15591,7 @@ function _linhaCobranca(p, hoje) {
       <button class="btn btn-sm btn-whats" title="Enviar mensagem no WhatsApp" onclick="abrirWhatsCobranca('${p.lancId}',${p.parcIdx})">📱</button>
       <button class="btn btn-secondary btn-sm cob-fup-btn" onclick="abrirFollowupCobranca('${p.lancId}',${p.parcIdx})">💬${nFup?`<span class="cob-fup-count">${nFup}</span>`:''}</button>
       <button class="btn btn-primary btn-sm" onclick="abrirBaixaCobranca('${p.lancId}',${p.parcIdx})">💵 Receber</button>
+      <button class="btn btn-sm btn-advogado" title="Enviar para cobrança com advogado" onclick="abrirEnviarAdvogado('${p.lancId}',${p.parcIdx})">⚖️ Advogado</button>
       <button class="btn btn-secondary btn-sm" onclick="editLancReceber('${p.lancId}')">Editar</button>
     </td>
   </tr>`;
@@ -15825,6 +16001,222 @@ function fecharAvisoAtraso() {
 
 
 // ══════════════════════════════════════════════════════════════════════
+// COBRANÇA ADVOGADO
+// ----------------------------------------------------------------------
+// A marcação fica no mesmo registro de cobrança da parcela (tabela
+// `config`, chave "cobranca:<lancId>:<parcela>"), no campo `advogado`.
+// Não precisa de tabela nova. Enquanto estiver com o advogado a parcela
+// some da agenda de Cobrança e aparece só nesta tela.
+// ══════════════════════════════════════════════════════════════════════
+function _cobEmAdvogado(lancId, parcIdx) {
+  const r = cobrancaDados[_cobKey(lancId, parcIdx)];
+  return !!(r && r.advogado);
+}
+function _saldoCob(p) { return Math.max(0, p.valParc - cobTotalBaixas(p.lancId, p.parcIdx)); }
+function _usuarioAtual() { return (currentUser && (currentUser.nome || currentUser.user)) || '—'; }
+
+function _outrasAtrasadasDoCliente(p0) {
+  const hoje = today();
+  return getParcelasReceber(false).filter(p =>
+    p.cliente === p0.cliente &&
+    !(p.lancId === p0.lancId && p.parcIdx === p0.parcIdx) &&
+    p.venc && p.venc < hoje &&
+    !_cobEmAdvogado(p.lancId, p.parcIdx) &&
+    _saldoCob(p) > 0.005);
+}
+
+function abrirEnviarAdvogado(lancId, parcIdx) {
+  const p = _acharParcela(lancId, parcIdx); if (!p) return;
+  _cobCtx = { lancId, parcIdx };
+  const hoje = today();
+  const dias = (p.venc && p.venc < hoje) ? diffDias(p.venc, hoje) : 0;
+  document.getElementById('cob-adv-info').innerHTML =
+    `<strong>${esc(getClienteNome(p.cliente))}</strong> · parcela ${p.parcIdx}/${p.totalParc} ·
+     saldo <strong style="color:#dc2626">${fmtBRL(_saldoCob(p))}</strong> · vencimento ${fmtDate(p.venc)}
+     ${dias > 0 ? `· <span class="cob-tag-atraso">${dias}d de atraso</span>` : ''}`;
+  // Advogados já usados, para facilitar o preenchimento
+  const nomes = [...new Set(Object.values(cobrancaDados).map(r => r && r.advogado && r.advogado.nome).filter(Boolean))].sort();
+  document.getElementById('cob-adv-lista').innerHTML = nomes.map(n => `<option value="${esc(n)}"></option>`).join('');
+  document.getElementById('cob-adv-nome').value = nomes.length === 1 ? nomes[0] : '';
+  document.getElementById('cob-adv-data').value = hoje;
+  document.getElementById('cob-adv-obs').value = '';
+  const outras = _outrasAtrasadasDoCliente(p);
+  const wrap = document.getElementById('cob-adv-todas-wrap');
+  document.getElementById('cob-adv-todas').checked = false;
+  if (outras.length) {
+    const tot = outras.reduce((a, x) => a + _saldoCob(x), 0);
+    document.getElementById('cob-adv-todas-txt').textContent =
+      `Enviar também as outras ${outras.length} parcela(s) em atraso deste cliente (${fmtBRL(tot)})`;
+    wrap.style.display = 'flex';
+  } else wrap.style.display = 'none';
+  openModal('modal-cob-advogado');
+  setTimeout(() => document.getElementById('cob-adv-nome').focus(), 50);
+}
+
+async function confirmarEnviarAdvogado() {
+  const nome = document.getElementById('cob-adv-nome').value.trim();
+  const data = document.getElementById('cob-adv-data').value;
+  const obs  = document.getElementById('cob-adv-obs').value.trim();
+  if (!nome) { alert('Informe o advogado ou escritório.'); return; }
+  if (!data) { alert('Informe a data de envio.'); return; }
+  const { lancId, parcIdx } = _cobCtx;
+  const p0 = _acharParcela(lancId, parcIdx); if (!p0) return;
+  let alvo = [p0];
+  if (document.getElementById('cob-adv-todas').checked) alvo = alvo.concat(_outrasAtrasadasDoCliente(p0));
+
+  const usuario = _usuarioAtual();
+  let falhas = 0;
+  for (const p of alvo) {
+    const reg = cobGet(p.lancId, p.parcIdx);
+    const anterior = reg.advogado || null;
+    reg.advogado = { nome, data, obs, usuario };
+    const fup = { id: uid(), data, hora: new Date().toTimeString().slice(0,5), canal: 'Advogado',
+                  pessoa: nome, resultado: 'Enviado para advogado',
+                  obs: obs || 'Parcela enviada para cobrança com advogado.', proximo: '', usuario };
+    reg.followups.push(fup);
+    const ok = await cobSalvar(p.lancId, p.parcIdx);
+    if (!ok) { reg.advogado = anterior; reg.followups = reg.followups.filter(f => f.id !== fup.id); falhas++; }
+  }
+  closeModal('modal-cob-advogado');
+  renderCobranca();
+  if (falhas) alert(`⚠️ ${alvo.length - falhas} parcela(s) enviada(s), ${falhas} com erro.` + sbErroMsg());
+  else alert(`✅ ${alvo.length} parcela(s) enviada(s) para cobrança com ${nome}.\nAcompanhe na tela "Cobrança Advogado".`);
+}
+
+async function retornarDoAdvogado(lancId, parcIdx) {
+  const p = _acharParcela(lancId, parcIdx); if (!p) return;
+  if (!confirm(`Retirar ${getClienteNome(p.cliente)} (parcela ${p.parcIdx}/${p.totalParc}) da cobrança com advogado e devolver para a agenda de Cobrança?`)) return;
+  const reg = cobGet(lancId, parcIdx);
+  const anterior = reg.advogado;
+  reg.advogado = null;
+  const fup = { id: uid(), data: today(), hora: new Date().toTimeString().slice(0,5), canal: 'Advogado',
+                pessoa: (anterior && anterior.nome) || '', resultado: 'Retornou do advogado',
+                obs: 'Parcela retirada da cobrança com advogado e devolvida para a agenda de Cobrança.',
+                proximo: '', usuario: _usuarioAtual() };
+  reg.followups.push(fup);
+  const ok = await cobSalvar(lancId, parcIdx);
+  if (!ok) {
+    reg.advogado = anterior; reg.followups = reg.followups.filter(f => f.id !== fup.id);
+    alert('❌ Não foi possível salvar.' + sbErroMsg()); return;
+  }
+  renderCobranca();
+}
+
+function _popularAnoMesAdvogado() {
+  const selAno = document.getElementById('cobadv-ano');
+  const selMes = document.getElementById('cobadv-mes');
+  if (!selAno || !selMes) return;
+  if (!selMes.options.length) {
+    selMes.innerHTML = '<option value="0">Todos os meses</option>' +
+      meses.slice(1).map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+    selMes.value = 0;
+  }
+  if (!selAno.options.length) {
+    const atual = new Date().getFullYear();
+    const anos = new Set();
+    for (let y = atual - 2; y <= atual + 1; y++) anos.add(y);
+    db.lancreceber.forEach(l => { if (l.dtprev) anos.add(parseInt(l.dtprev.split('-')[0])); });
+    selAno.innerHTML = '<option value="">Todos os anos</option>' +
+      [...anos].filter(y => y > 1990).sort((a,b) => b - a).map(y => `<option value="${y}">${y}</option>`).join('');
+    selAno.value = atual;
+  }
+}
+
+function clearCobrancaAdvogadoFiltros() {
+  ['cobadv-adv','cobadv-cliente','cobadv-busca'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('cobadv-ano').value = new Date().getFullYear();
+  document.getElementById('cobadv-mes').value = 0;
+  renderCobrancaAdvogado();
+}
+
+function renderCobrancaAdvogado() {
+  if (!paginaVisivel('cobranca-advogado')) return;
+  const hoje = today();
+  const advDe = p => (cobrancaDados[_cobKey(p.lancId, p.parcIdx)] || {}).advogado || {};
+  _popularAnoMesAdvogado();
+  const fAno = document.getElementById('cobadv-ano').value;
+  const fMes = parseInt(document.getElementById('cobadv-mes').value) || 0;
+  const todas = getParcelasReceber(false).filter(p => {
+    if (!_cobEmAdvogado(p.lancId, p.parcIdx) || _saldoCob(p) <= 0.005) return false;
+    if (fAno || fMes) {
+      const pt = (p.venc || '').split('-');
+      if (fAno && pt[0] !== String(fAno)) return false;
+      if (fMes && parseInt(pt[1]) !== fMes) return false;
+    }
+    return true;
+  });
+
+  // Filtros montados com o que existe na tela
+  const selA = document.getElementById('cobadv-adv'), selC = document.getElementById('cobadv-cliente');
+  const vA = selA.value, vC = selC.value;
+  const advs = [...new Set(todas.map(p => advDe(p).nome).filter(Boolean))].sort();
+  selA.innerHTML = '<option value="">Todos</option>' + advs.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+  selA.value = vA;
+  const clis = [...new Set(todas.map(p => p.cliente))]
+    .map(id => [id, getClienteNome(id)]).sort((a,b) => a[1].localeCompare(b[1], 'pt-BR', { numeric: true }));
+  selC.innerHTML = '<option value="">Todos</option>' + clis.map(([id, n]) => `<option value="${esc(id)}">${esc(n)}</option>`).join('');
+  selC.value = vC;
+
+  const fA = selA.value, fC = selC.value;
+  const busca = (document.getElementById('cobadv-busca').value || '').trim().toLowerCase();
+  const list = todas.filter(p => {
+    if (fA && advDe(p).nome !== fA) return false;
+    if (fC && p.cliente !== fC) return false;
+    if (busca) {
+      const txt = (getClienteNome(p.cliente) + ' ' + (p.nf || '') + ' ' + (p.prod ? getProdVendaNome(p.prod) : '')).toLowerCase();
+      if (!txt.includes(busca)) return false;
+    }
+    return true;
+  }).sort((a,b) => (a.venc || '9999').localeCompare(b.venc || '9999') ||
+                   getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente), 'pt-BR', { numeric: true }));
+
+  const totSaldo = list.reduce((a, p) => a + _saldoCob(p), 0);
+  const totParcial = list.reduce((a, p) => a + Math.min(p.valParc, cobTotalBaixas(p.lancId, p.parcIdx)), 0);
+  document.getElementById('cobadv-kpis').innerHTML = `
+    <div class="card kpi"><div class="kpi-val" style="color:#5b21b6">${list.length}</div><div class="kpi-lbl">Parcelas com advogado</div></div>
+    <div class="card kpi"><div class="kpi-val" style="color:#dc2626">${fmtBRL(totSaldo)}</div><div class="kpi-lbl">Saldo em cobrança</div></div>
+    <div class="card kpi"><div class="kpi-val" style="color:#16a34a">${fmtBRL(totParcial)}</div><div class="kpi-lbl">Já recebido (parcial)</div></div>
+    <div class="card kpi"><div class="kpi-val">${new Set(list.map(p => p.cliente)).size} <small style="font-size:13px;color:#a8a29e">cli · ${new Set(list.map(p => advDe(p).nome)).size} adv</small></div><div class="kpi-lbl">Clientes / advogados</div></div>`;
+
+  const tb = document.getElementById('tb-cobranca-advogado');
+  window._pdfLists = window._pdfLists || {}; window._pdfLists['cobranca-advogado'] = list.slice();
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="13" class="empty-state">Nenhuma parcela com advogado. Use o botão ⚖️ Advogado na tela de Cobrança.</td></tr>';
+    return;
+  }
+  const _c = _cortarLista(list, 13);
+  tb.innerHTML = _c.aviso + _c.itens.map(p => {
+    const reg = cobGet(p.lancId, p.parcIdx);
+    const adv = reg.advogado || {};
+    const pago = cobTotalBaixas(p.lancId, p.parcIdx);
+    const saldo = _saldoCob(p);
+    const dias = (p.venc && p.venc < hoje) ? diffDias(p.venc, hoje) : 0;
+    const juros = calcJuros(saldo, p.venc, p.juros != null ? p.juros : getJurosGlobal());
+    const nFup = (reg.followups || []).length;
+    return `<tr>
+      <td><b>${esc(getClienteNome(p.cliente))}</b></td>
+      <td style="font-size:12px">${p.prod ? esc(getProdVendaNome(p.prod)) : '—'}</td>
+      <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
+      <td style="font-family:DM Mono,monospace">${fmtBRL(p.valParc)}</td>
+      <td style="font-family:DM Mono,monospace;color:${pago>0?'#16a34a':'#a8a29e'}">${pago>0?fmtBRL(pago):'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-weight:700;color:#dc2626">${fmtBRL(saldo)}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px;color:${juros>0?'#c2410c':'#a8a29e'}">${juros>0?'+'+fmtBRL(juros):'—'}</td>
+      <td style="font-family:DM Mono,monospace">${fmtDate(p.venc)}</td>
+      <td>${dias > 0 ? `<span class="cob-tag-atraso">${dias}d</span>` : '<span style="color:#a8a29e">—</span>'}</td>
+      <td><span class="cob-adv-tag">${esc(adv.nome) || '—'}</span>${adv.obs ? `<br><span style="font-size:11px;color:#a8a29e">${esc(adv.obs)}</span>` : ''}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${fmtDate(adv.data)}</td>
+      <td style="font-size:12px">${nFup}</td>
+      <td class="actions">
+        <button class="btn btn-sm btn-whats" title="Enviar mensagem no WhatsApp" onclick="abrirWhatsCobranca('${p.lancId}',${p.parcIdx})">📱</button>
+        <button class="btn btn-secondary btn-sm cob-fup-btn" onclick="abrirFollowupCobranca('${p.lancId}',${p.parcIdx})">💬${nFup?`<span class="cob-fup-count">${nFup}</span>`:''}</button>
+        <button class="btn btn-primary btn-sm" onclick="abrirBaixaCobranca('${p.lancId}',${p.parcIdx})">💵 Receber</button>
+        <button class="btn btn-secondary btn-sm" title="Devolver para a agenda de Cobrança" onclick="retornarDoAdvogado('${p.lancId}',${p.parcIdx})">↩ Retornar</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // MENSAGENS DE COBRANÇA VIA WHATSAPP
 // ----------------------------------------------------------------------
 // Os modelos de texto ficam na tabela `config` (key = cobranca_mensagens),
@@ -15916,7 +16308,7 @@ function _montarMensagemCobranca(texto, p) {
   const semRS = v => fmtBRL(v).replace('R$', '').trim();
   const mesComp = p.dtvenda ? (meses[parseInt(p.dtvenda.split('-')[1])] || '') : '';
   const mapa = {
-    '{Nome do Cliente}': cli.nome || getClienteNome(p.cliente),
+    '{Nome do Cliente}': cli.nome || getClienteNomePuro(p.cliente),
     '{Seu Nome}':        cobMsgConfig.remetente || (currentUser && currentUser.nome) || '',
     '{Nome da Empresa}': cobMsgConfig.empresa || (empresaAtual() ? empresaNome(empresaAtual()) : 'Madeireira Nones'),
     '{Valor}':           semRS(saldo),

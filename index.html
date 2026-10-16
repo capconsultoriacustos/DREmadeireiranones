@@ -952,6 +952,9 @@ tr.cob-dia-vazio > td {
 .dfc-table td.num-click { cursor:pointer; }
 .dfc-table td.num-click:hover { outline:2px solid #ea580c; outline-offset:-2px; border-radius:4px; }
 .fd-tabela td.fd-click { cursor:pointer; }
+td.lr-edit { font-family:'DM Mono',monospace; font-size:12px; cursor:pointer; border-radius:4px; }
+td.lr-edit:hover { outline:1.5px dashed #ea580c; outline-offset:-3px; background:#fff8f3; }
+td.lr-edit input { width:100%; min-width:90px; padding:4px 6px; font-size:12px; font-family:'DM Mono',monospace; }
 .fd-tabela td.fd-click:hover { outline:2px solid #ea580c; outline-offset:-2px; }
 .fd-tabela td.fd-res.fd-click:hover { outline-color:#0f172a; }
 .fd-det-linha {
@@ -1757,8 +1760,8 @@ tr.cob-dia-vazio > td {
         </div>
         <div class="table-scroll"><table><thead><tr id="th-lancreceber-row">
           <th>Data da Competência</th><th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Valor</th><th>Parcelas</th>
-          <th>Prev. Receb.</th><th>NF</th><th>Financeiro</th><th>Recebido</th><th>Ações</th>
-        </tr></thead><tbody id="tb-lancreceber"><tr><td colspan="12" class="empty-state">Nenhum lançamento registrado.</td></tr></tbody></table></div>
+          <th>Prev. Receb.</th><th>NF</th><th>Romaneio</th><th>Financeiro</th><th>Recebido</th><th>Ações</th>
+        </tr></thead><tbody id="tb-lancreceber"><tr><td colspan="13" class="empty-state">Nenhum lançamento registrado.</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -1842,8 +1845,8 @@ tr.cob-dia-vazio > td {
           </div>
         </div>
         <div class="table-scroll"><table><thead><tr id="th-areceber-row">
-          <th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Juros</th><th>Total c/ Juros</th><th>Dt. Competência</th><th>Vencimento</th><th>Situação</th><th>Forma Receb.</th><th>NF</th><th>Financeiro</th><th>Ações</th>
-        </tr></thead><tbody id="tb-areceber"><tr><td colspan="15" class="empty-state">Nenhuma parcela em aberto.</td></tr></tbody></table></div>
+          <th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Juros</th><th>Total c/ Juros</th><th>Dt. Competência</th><th>Vencimento</th><th>Situação</th><th>Forma Receb.</th><th>NF</th><th>Romaneio</th><th>Financeiro</th><th>Ações</th>
+        </tr></thead><tbody id="tb-areceber"><tr><td colspan="16" class="empty-state">Nenhuma parcela em aberto.</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -1995,7 +1998,7 @@ tr.cob-dia-vazio > td {
               <option value="aberto">Todas em aberto</option>
             </select>
           </div>
-          <div class="form-group"><label>Buscar (cliente / NF / produto)</label>
+          <div class="form-group"><label>Buscar (cliente / NF / romaneio / produto)</label>
             <input type="text" id="cob-busca" oninput="renderCobranca()" placeholder="Digite para filtrar..." style="width:220px" />
           </div>
           <div class="form-group"><label>Atraso mínimo (dias)</label>
@@ -2008,11 +2011,11 @@ tr.cob-dia-vazio > td {
 
         <div class="table-scroll" style="max-height:none">
           <table><thead><tr>
-            <th>Cliente</th><th>Produto</th><th>Parcela</th><th>Valor</th>
+            <th>Cliente</th><th>Produto</th><th>Parcela</th><th>Romaneio</th><th>Valor</th>
             <th>Recebido</th><th>Saldo</th><th>Juros</th>
             <th>Previsão / Venc.</th><th>Atraso</th><th>Follow-up</th><th>Situação</th><th>Ações</th>
           </tr></thead><tbody id="tb-cobranca">
-            <tr><td colspan="12" class="empty-state">Nenhuma cobrança nesta semana.</td></tr>
+            <tr><td colspan="13" class="empty-state">Nenhuma cobrança nesta semana.</td></tr>
           </tbody></table>
         </div>
       </div>
@@ -2047,17 +2050,17 @@ tr.cob-dia-vazio > td {
           <div class="form-group"><label>Cliente</label>
             <select id="cobadv-cliente" onchange="renderCobrancaAdvogado()"><option value="">Todos</option></select>
           </div>
-          <div class="form-group"><label>Buscar (código / cliente / NF / produto)</label>
+          <div class="form-group"><label>Buscar (código / cliente / NF / romaneio / produto)</label>
             <input type="text" id="cobadv-busca" oninput="renderCobrancaAdvogado()" placeholder="Digite para filtrar..." style="width:240px" />
           </div>
           <div style="align-self:flex-end"><button class="btn btn-secondary" onclick="clearCobrancaAdvogadoFiltros()">Limpar</button></div>
         </div>
         <div class="table-scroll" style="max-height:none">
           <table><thead><tr>
-            <th>Cliente</th><th>Produto</th><th>Parcela</th><th>Valor</th><th>Recebido</th><th>Saldo</th><th>Juros</th>
+            <th>Cliente</th><th>Produto</th><th>Parcela</th><th>Romaneio</th><th>Valor</th><th>Recebido</th><th>Saldo</th><th>Juros</th>
             <th>Vencimento</th><th>Atraso</th><th>Advogado</th><th>Enviado em</th><th>Follow-up</th><th>Ações</th>
           </tr></thead><tbody id="tb-cobranca-advogado">
-            <tr><td colspan="13" class="empty-state">Nenhuma parcela com advogado.</td></tr>
+            <tr><td colspan="14" class="empty-state">Nenhuma parcela com advogado.</td></tr>
           </tbody></table>
         </div>
       </div>
@@ -2109,8 +2112,8 @@ tr.cob-dia-vazio > td {
           <div style="align-self:flex-end"><button class="btn btn-secondary" onclick="clearRecebidoFiltros()">Limpar</button></div>
         </div>
         <div class="table-scroll"><table><thead><tr id="th-recebido-row">
-          <th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Vencimento</th><th>Dt. Competência</th><th>Dt. Recebimento</th><th>Forma Receb.</th><th>NF</th><th>Financeiro</th><th>Ações</th>
-        </tr></thead><tbody id="tb-recebido"><tr><td colspan="13" class="empty-state">Nenhum recebimento registrado.</td></tr></tbody></table></div>
+          <th>Código</th><th>Cliente</th><th>Produto</th><th>Categoria</th><th>Parcela</th><th>Valor Parcela</th><th>Vencimento</th><th>Dt. Competência</th><th>Dt. Recebimento</th><th>Forma Receb.</th><th>NF</th><th>Romaneio</th><th>Financeiro</th><th>Ações</th>
+        </tr></thead><tbody id="tb-recebido"><tr><td colspan="14" class="empty-state">Nenhum recebimento registrado.</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -3021,6 +3024,7 @@ tr.cob-dia-vazio > td {
     </div>
     <div class="grid3">
       <div class="form-group" style="grid-column:span 2"><label class="label-add">Categoria<button type="button" class="btn-add-inline" title="Cadastrar nova categoria" onclick="abrirCadastroRapido('categoria','lr-catdre')">+</button></label><select id="lr-catdre"><option value="">Nenhuma</option></select></div>
+      <div class="form-group"><label>Nº do Romaneio</label><input id="lr-romaneio" type="text" placeholder="Nº do romaneio" /></div>
     </div>
     <div class="grid3">
       <div class="form-group"><label>Número de Parcelas</label>
@@ -3177,6 +3181,7 @@ tr.cob-dia-vazio > td {
     </div>
     <div class="grid3">
       <div class="form-group" style="grid-column:span 2"><label class="label-add">Categoria<button type="button" class="btn-add-inline" title="Cadastrar nova categoria" onclick="abrirCadastroRapido('categoria','elr-catdre')">+</button></label><select id="elr-catdre"><option value="">Nenhuma</option></select></div>
+      <div class="form-group"><label>Nº do Romaneio</label><input id="elr-romaneio" type="text" placeholder="Nº do romaneio" /></div>
     </div>
     <div class="grid3">
       <div class="form-group"><label>Parcelas</label>
@@ -9401,7 +9406,7 @@ function _buildParcelasReceber() {
       parcelas.push({
         lancId:l.id, cliente:l.cliente, prod:l.prod, valParc, venc,
         dtvenda:l.dtvenda, dtrecebido, catId,
-        nf:l.nf, financeiro:l.financeiro, banco: l.banco || '', tipoPag: l.tipo_pag || '',
+        nf:l.nf, romaneio:l.romaneio||'', financeiro:l.financeiro, banco: l.banco || '', tipoPag: l.tipo_pag || '',
         parcIdx:i, totalParc:n,
         isRecebido
       });
@@ -9602,6 +9607,7 @@ async function saveLancReceber() {
   const lanc={ id:uid(), empresa_id, dtvenda,
     dtprev:document.getElementById('lr-dtprev').value,
     nf:document.getElementById('lr-nf').value,
+    romaneio:document.getElementById('lr-romaneio').value.trim(),
     cliente, prod:document.getElementById('lr-prod').value,
     valor, parcelas,
     financeiro:document.getElementById('lr-financeiro').value,
@@ -9622,7 +9628,7 @@ async function saveLancReceber() {
 }
 function clearLancReceber() {
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-  ['lr-dtvenda','lr-dtprev','lr-nf','lr-obs','lr-valor','lr-juros'].forEach(id => set(id, ''));
+  ['lr-dtvenda','lr-dtprev','lr-nf','lr-romaneio','lr-obs','lr-valor','lr-juros'].forEach(id => set(id, ''));
   set('lr-cliente','');
   set('lr-prod','');
   set('lr-catdre','');
@@ -9684,14 +9690,15 @@ function renderLancReceber() {
     { key:'parcelas', label:'Parcelas', get:l=>l.parcelas||1, display:l=>`${l.parcelas}x` },
     { key:'dtprev', label:'Prev. Receb.', get:l=>l.dtprev, display:l=>fmtDate(l.dtprev) },
     { key:'nf', label:'NF', get:l=>l.nf||null },
+    { key:'romaneio', label:'Romaneio', get:l=>l.romaneio||null },
     { key:'financeiro', label:'Financeiro', get:l=>l.financeiro==='sim'?'Sim':'Não' },
     { key:'recebido', label:'Recebido', get:l=>l.recebido==='sim'?'Recebido':'Pendente' },
     { key:'acoes', label:'Ações', get:()=>'', noFilter:true }
   ];
   list = efMount('lancreceber','th-lancreceber-row',colsLR,list,renderLancReceber);
   window._pdfLists = window._pdfLists || {}; window._pdfLists.lancreceber = list.slice();
-  if(!list.length){ tb.innerHTML='<tr><td colspan="12" class="empty-state">Nenhum lançamento encontrado.</td></tr>'; return; }
-  const _c = _cortarLista(list, 12);
+  if(!list.length){ tb.innerHTML='<tr><td colspan="13" class="empty-state">Nenhum lançamento encontrado.</td></tr>'; return; }
+  const _c = _cortarLista(list, 13);
   tb.innerHTML = _c.aviso + _c.itens.map(l=>{
     const finBadge=l.financeiro==='sim'?'<span class="badge badge-green">Sim</span>':'<span class="badge badge-red">Não</span>';
     const recBadge=l.recebido==='sim'?'<span class="badge badge-green">Recebido</span>':'<span class="badge badge-yellow">Pendente</span>';
@@ -9707,7 +9714,8 @@ function renderLancReceber() {
       <td style="font-family:DM Mono,monospace">${fmtBRL(l.valor)}</td>
       <td>${l.parcelas}x</td>
       <td>${fmtDate(l.dtprev)}</td>
-      <td style="font-family:DM Mono,monospace;font-size:12px">${l.nf||'—'}</td>
+      <td class="lr-edit" title="Clique para editar a NF" onclick="editarCampoLR(this,'${l.id}','nf')">${esc(l.nf)||'—'}</td>
+      <td class="lr-edit" title="Clique para editar o romaneio" onclick="editarCampoLR(this,'${l.id}','romaneio')">${esc(l.romaneio)||'—'}</td>
       <td>${finBadge}</td><td>${recBadge}</td>
       <td class="actions">
         <button class="btn btn-secondary btn-sm" onclick="editLancReceber('${l.id}')">Editar</button>
@@ -9728,6 +9736,7 @@ function editLancReceber(id) {
   document.getElementById('elr-dtvenda').value=l.dtvenda||l.dtcompra||'';
   document.getElementById('elr-dtprev').value=l.dtprev||'';
   document.getElementById('elr-nf').value=l.nf||'';
+  document.getElementById('elr-romaneio').value=l.romaneio||'';
   document.getElementById('elr-valor').value=l.valor;
   document.getElementById('elr-parcelas').value=l.parcelas;
   document.getElementById('elr-financeiro').value=l.financeiro;
@@ -9769,6 +9778,7 @@ async function updateLancReceber() {
   l.dtvenda=document.getElementById('elr-dtvenda').value;
   l.dtprev=document.getElementById('elr-dtprev').value;
   l.nf=document.getElementById('elr-nf').value;
+  l.romaneio=document.getElementById('elr-romaneio').value.trim();
   l.cliente=document.getElementById('elr-cliente').value;
   l.prod=document.getElementById('elr-prod').value;
   l.valor=parseFloat(document.getElementById('elr-valor').value)||0;
@@ -9781,13 +9791,45 @@ async function updateLancReceber() {
   l.cat_dre = document.getElementById('elr-catdre') ? document.getElementById('elr-catdre').value : (l.cat_dre||'');
   const manualDates = l.parcelas > 1 ? getManualParcelaDates('elr-parcela-dates', l.parcelas) : null;
   l.parcela_datas = l.parcelas > 1 ? buildParcelaDatasPayload('elr-parcela-dates', l.parcelas) : null;
-  const okU = await sbFetch('lancreceber','PATCH',{empresa_id:l.empresa_id,dtvenda:l.dtvenda,dtprev:l.dtprev,nf:l.nf,cliente:l.cliente,prod:l.prod,valor:l.valor,parcelas:l.parcelas,financeiro:l.financeiro,recebido:l.recebido,banco:l.banco,obs:l.obs,cat_dre:l.cat_dre,parcela_datas:l.parcela_datas},`?id=eq.${id}`);
+  const okU = await sbFetch('lancreceber','PATCH',{empresa_id:l.empresa_id,dtvenda:l.dtvenda,dtprev:l.dtprev,nf:l.nf,romaneio:l.romaneio||'',cliente:l.cliente,prod:l.prod,valor:l.valor,parcelas:l.parcelas,financeiro:l.financeiro,recebido:l.recebido,banco:l.banco,obs:l.obs,cat_dre:l.cat_dre,parcela_datas:l.parcela_datas},`?id=eq.${id}`);
   if (!okU) { alert('❌ Não foi possível salvar a edição no banco de dados.' + sbErroMsg()); return; }
   // Se a empresa foi trocada para uma diferente da ativa no seletor, o
   // registro tem que sumir da lista atual (senão fica aparecendo na empresa errada).
   if (!pertenceEmpresaAtiva(l.empresa_id)) db.lancreceber = db.lancreceber.filter(x => x.id !== l.id);
   closeModal('modal-lancreceber'); renderLancReceber();
 }
+// Edição rápida de NF e Romaneio direto na tabela de Lançamentos a Receber.
+// Clique na célula → digite → Enter (ou clique fora) salva; Esc cancela.
+function editarCampoLR(td, id, campo) {
+  if (td.querySelector('input')) return;
+  const l = db.lancreceber.find(x => x.id === id); if (!l) return;
+  const atual = l[campo] || '';
+  td.innerHTML = '';
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.value = atual;
+  inp.placeholder = campo === 'nf' ? 'Nº da NF' : 'Nº do romaneio';
+  td.appendChild(inp); inp.focus(); inp.select();
+  let feito = false;
+  const restaurar = v => { td.textContent = v || '—'; };
+  const salvar = async () => {
+    if (feito) return; feito = true;
+    const novo = inp.value.trim();
+    if (novo === atual) { restaurar(atual); return; }
+    td.textContent = 'salvando...';
+    const ok = await sbFetch('lancreceber', 'PATCH', { [campo]: novo }, `?id=eq.${id}`);
+    if (!ok) { restaurar(atual); alert('❌ Não foi possível salvar.' + sbErroMsg()); return; }
+    l[campo] = limparTexto(novo);
+    bumpDbVer();
+    restaurar(l[campo]);
+  };
+  inp.addEventListener('click', e => e.stopPropagation());
+  inp.addEventListener('blur', salvar);
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+    if (e.key === 'Escape') { feito = true; restaurar(atual); }
+  });
+}
+
 async function deleteLancReceber(id) {
   if(!confirm('Excluir este lançamento?')) return;
   await sbFetch('lancreceber','DELETE',null,`?id=eq.${id}`);
@@ -9935,6 +9977,7 @@ function renderAReceber() {
     { key:'situacao', label:'Situação', get:p=>situacaoParcela(p.venc).label },
     { key:'tipopag', label:'Forma Receb.', get:p=>p.tipoPag||null },
     { key:'nf', label:'NF', get:p=>p.nf||null },
+    { key:'romaneio', label:'Romaneio', get:p=>p.romaneio||null },
     { key:'financeiro', label:'Financeiro', get:p=>p.financeiro==='sim'?'Sim':'Não' },
     { key:'acoes', label:'Ações', get:()=>'', noFilter:true }
   ];
@@ -9949,10 +9992,10 @@ function renderAReceber() {
     <div class="card kpi"><div class="kpi-val" style="color:#16a34a">${fmtBRL(total)}</div><div class="kpi-lbl">Total a receber</div></div>
     <div class="card kpi"><div class="kpi-val" style="color:#dc2626">${fmtBRL(totalComJuros)}</div><div class="kpi-lbl">Total c/ Juros</div></div>
     <div class="card kpi"><div class="kpi-val" style="color:#d97706">${vencidas}</div><div class="kpi-lbl">Vencidas</div></div>`;
-  if(!list.length){ tb.innerHTML='<tr><td colspan="15" class="empty-state">Nenhuma parcela em aberto.</td></tr>'; return; }
+  if(!list.length){ tb.innerHTML='<tr><td colspan="16" class="empty-state">Nenhuma parcela em aberto.</td></tr>'; return; }
   if(!_efState('areceber').sortKey) list.sort((a,b)=>(a.venc||'9999').localeCompare(b.venc||'9999'));
   window._pdfLists = window._pdfLists || {}; window._pdfLists.areceber = list.slice();
-  const _c = _cortarLista(list, 15);
+  const _c = _cortarLista(list, 16);
   tb.innerHTML = _c.aviso + _c.itens.map(p=>{
     const sit=situacaoParcela(p.venc);
     const finBadge=p.financeiro==='sim'?'<span class="badge badge-green">Sim</span>':'<span class="badge badge-red">Não</span>';
@@ -9979,6 +10022,7 @@ function renderAReceber() {
       <td><span class="badge ${sit.cls}">${sit.label}</span></td>
       <td>${p.tipoPag ? `<span class="badge badge-blue">${p.tipoPag}</span>` : '<span style="color:#a8a29e;font-size:12px">—</span>'}</td>
       <td style="font-size:12px">${p.nf||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${esc(p.romaneio)||'—'}</td>
       <td>${finBadge}</td>
       <td class="actions">
         <button class="btn btn-secondary btn-sm" onclick="editLancReceber('${p.lancId}')">Editar</button>
@@ -10137,14 +10181,15 @@ function renderRecebido() {
     { key:'dtrecebido', label:'Dt. Recebimento', get:p=>p.dtrecebido, display:p=>fmtDate(p.dtrecebido) },
     { key:'tipopag', label:'Forma Receb.', get:p=>p.tipoPag||null },
     { key:'nf', label:'NF', get:p=>p.nf||null },
+    { key:'romaneio', label:'Romaneio', get:p=>p.romaneio||null },
     { key:'financeiro', label:'Financeiro', get:p=>p.financeiro==='sim'?'Sim':'Não' },
     { key:'acoes', label:'Ações', get:()=>'', noFilter:true }
   ];
   list = efMount('recebido','th-recebido-row',colsRec,list,renderRecebido);
-  if(!list.length){ tb.innerHTML='<tr><td colspan="13" class="empty-state">Nenhum recebimento registrado.</td></tr>'; return; }
+  if(!list.length){ tb.innerHTML='<tr><td colspan="14" class="empty-state">Nenhum recebimento registrado.</td></tr>'; return; }
   if(!_efState('recebido').sortKey) list.sort((a,b)=>(b.venc||'').localeCompare(a.venc||''));
   window._pdfLists = window._pdfLists || {}; window._pdfLists.recebido = list.slice();
-  const _c = _cortarLista(list, 13);
+  const _c = _cortarLista(list, 14);
   tb.innerHTML = _c.aviso + _c.itens.map(p=>{
     const finBadge=p.financeiro==='sim'?'<span class="badge badge-green">Sim</span>':'<span class="badge badge-red">Não</span>';
     const dtrecCell=p.dtrecebido
@@ -10162,6 +10207,7 @@ function renderRecebido() {
       <td>${dtrecCell}</td>
       <td>${p.tipoPag ? `<span class="badge badge-blue">${p.tipoPag}</span>` : '<span style="color:#a8a29e;font-size:12px">—</span>'}</td>
       <td style="font-size:12px">${p.nf||'—'}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${esc(p.romaneio)||'—'}</td>
       <td>${finBadge}</td>
       <td><button class="btn btn-danger btn-sm" onclick="estornarRecebido('${p.lancId}', ${p.parcIdx})" title="Desfazer recebimento">↩ Estornar</button></td>
     </tr>`;
@@ -14101,6 +14147,7 @@ function _pdfDiaColsDef(pagina) {
       { key:'situacao',  label:'Situação',       get:p=>situacaoParcela(p.venc).label },
       { key:'forma',     label:'Forma Receb.',   get:p=>p.tipoPag||'—' },
       { key:'nf',        label:'NF',             get:p=>p.nf||'—' },
+      { key:'romaneio',  label:'Romaneio',       get:p=>p.romaneio||'—' },
       { key:'financeiro',label:'Financeiro',     get:p=>p.financeiro==='sim'?'Sim':'Não' }
     ],
     recebido: [
@@ -14114,6 +14161,7 @@ function _pdfDiaColsDef(pagina) {
       { key:'dtrecebido',label:'Dt. Recebimento',get:p=>fmtDate(p.dtrecebido) },
       { key:'forma',     label:'Forma Receb.',   get:p=>p.tipoPag||'—' },
       { key:'nf',        label:'NF',             get:p=>p.nf||'—' },
+      { key:'romaneio',  label:'Romaneio',       get:p=>p.romaneio||'—' },
       { key:'financeiro',label:'Financeiro',     get:p=>p.financeiro==='sim'?'Sim':'Não' }
     ],
     lancreceber: [
@@ -14126,6 +14174,7 @@ function _pdfDiaColsDef(pagina) {
       { key:'dtvenda',   label:'Dt. Competência', get:p=>fmtDate(p.dtvenda||p.dtcompra) },
       { key:'dtprev',    label:'Vencimento',     get:p=>fmtDate(p.dtprev) },
       { key:'nf',        label:'NF',             get:p=>p.nf||'—' },
+      { key:'romaneio',  label:'Romaneio',       get:p=>p.romaneio||'—' },
       { key:'financeiro',label:'Financeiro',     get:p=>p.financeiro==='sim'?'Sim':'Não' },
       { key:'recebido',  label:'Recebido',       get:p=>p.recebido==='sim'?'Recebido':'Pendente' }
     ]
@@ -15356,7 +15405,7 @@ function clearCustosFixosFiltros() {
 
 
 // ── Marcador de versão (para confirmar qual arquivo está no ar) ──
-window.APP_BUILD = '2026-10-15c · madeireira-nones · codigo-cliente-receber';
+window.APP_BUILD = '2026-10-16a · madeireira-nones · romaneio-edicao-rapida';
 (function(){ var b = document.getElementById('sidebar-build'); if (b) b.textContent = 'build ' + window.APP_BUILD; })();
 
 // Fechar modais clicando fora
@@ -15529,7 +15578,7 @@ function renderCobranca() {
       if (d < atrasoMin) return false;
     }
     if (busca) {
-      const txt = (getClienteNome(p.cliente) + ' ' + (p.nf||'') + ' ' + (p.prod ? getProdVendaNome(p.prod) : '')).toLowerCase();
+      const txt = (getClienteNome(p.cliente) + ' ' + (p.nf||'') + ' ' + (p.romaneio||'') + ' ' + (p.prod ? getProdVendaNome(p.prod) : '')).toLowerCase();
       if (!txt.includes(busca)) return false;
     }
     return true;
@@ -15550,7 +15599,7 @@ function renderCobranca() {
 
   const tb = document.getElementById('tb-cobranca');
   if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="12" class="empty-state">Nenhuma cobrança ${escopo==='mes' ? 'neste mês' : 'pendente'} com os filtros atuais. 🎉</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="13" class="empty-state">Nenhuma cobrança ${escopo==='mes' ? 'neste mês' : 'pendente'} com os filtros atuais. 🎉</td></tr>`;
     window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = [];
     return;
   }
@@ -15559,7 +15608,7 @@ function renderCobranca() {
   const porNome = (a,b) => getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente), 'pt-BR', { numeric: true });
   const ordenada = list.slice().sort((a,b) =>
     (a.venc || '9999-99-99').localeCompare(b.venc || '9999-99-99') || porNome(a,b));
-  const _c = _cortarLista(ordenada, 12);
+  const _c = _cortarLista(ordenada, 13);
   tb.innerHTML = _c.aviso + _c.itens.map(p => _linhaCobranca(p, hoje)).join('');
   window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = ordenada;
 }
@@ -15579,6 +15628,7 @@ function _linhaCobranca(p, hoje) {
     <td><b>${esc(getClienteNome(p.cliente))}</b>${pago > 0 ? ' <span class="cob-tag-parcial">parcial</span>' : ''}</td>
     <td style="font-size:12px">${p.prod ? esc(getProdVendaNome(p.prod)) : '—'}</td>
     <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
+    <td style="font-family:DM Mono,monospace;font-size:12px">${esc(p.romaneio)||'—'}</td>
     <td style="font-family:DM Mono,monospace">${fmtBRL(p.valParc)}</td>
     <td style="font-family:DM Mono,monospace;color:${pago>0?'#16a34a':'#a8a29e'}">${pago>0?fmtBRL(pago):'—'}</td>
     <td style="font-family:DM Mono,monospace;font-weight:700;color:#dc2626">${fmtBRL(saldo)}</td>
@@ -16169,7 +16219,7 @@ function renderCobrancaAdvogado() {
     if (fA && advDe(p).nome !== fA) return false;
     if (fC && p.cliente !== fC) return false;
     if (busca) {
-      const txt = (getClienteNome(p.cliente) + ' ' + (p.nf || '') + ' ' + (p.prod ? getProdVendaNome(p.prod) : '')).toLowerCase();
+      const txt = (getClienteNome(p.cliente) + ' ' + (p.nf || '') + ' ' + (p.romaneio || '') + ' ' + (p.prod ? getProdVendaNome(p.prod) : '')).toLowerCase();
       if (!txt.includes(busca)) return false;
     }
     return true;
@@ -16187,10 +16237,10 @@ function renderCobrancaAdvogado() {
   const tb = document.getElementById('tb-cobranca-advogado');
   window._pdfLists = window._pdfLists || {}; window._pdfLists['cobranca-advogado'] = list.slice();
   if (!list.length) {
-    tb.innerHTML = '<tr><td colspan="13" class="empty-state">Nenhuma parcela com advogado. Use o botão ⚖️ Advogado na tela de Cobrança.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="14" class="empty-state">Nenhuma parcela com advogado. Use o botão ⚖️ Advogado na tela de Cobrança.</td></tr>';
     return;
   }
-  const _c = _cortarLista(list, 13);
+  const _c = _cortarLista(list, 14);
   tb.innerHTML = _c.aviso + _c.itens.map(p => {
     const reg = cobGet(p.lancId, p.parcIdx);
     const adv = reg.advogado || {};
@@ -16203,6 +16253,7 @@ function renderCobrancaAdvogado() {
       <td><b>${esc(getClienteNome(p.cliente))}</b></td>
       <td style="font-size:12px">${p.prod ? esc(getProdVendaNome(p.prod)) : '—'}</td>
       <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${esc(p.romaneio)||'—'}</td>
       <td style="font-family:DM Mono,monospace">${fmtBRL(p.valParc)}</td>
       <td style="font-family:DM Mono,monospace;color:${pago>0?'#16a34a':'#a8a29e'}">${pago>0?fmtBRL(pago):'—'}</td>
       <td style="font-family:DM Mono,monospace;font-weight:700;color:#dc2626">${fmtBRL(saldo)}</td>

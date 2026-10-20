@@ -2966,6 +2966,29 @@ td.lr-edit input { width:100%; min-width:90px; padding:4px 6px; font-size:12px; 
         <select id="l-banco"><option value="">Não informado</option></select>
       </div>
     </div>
+    <!-- ══ PAGAMENTO EM VÁRIAS FORMAS (cheque pré-datado, cheque de cliente, dinheiro...) ══ -->
+    <div style="border:1px solid #fed7aa;border-radius:8px;padding:12px 14px;margin-bottom:16px;background:#fffaf5;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#9a3412;margin:0;">
+        <input type="checkbox" id="l-pgmix" onchange="togglePgMix()" style="width:16px;height:16px;accent-color:#ea580c;cursor:pointer;" />
+        💳 Pagar em várias formas (cheque pré-datado, cheque de cliente, dinheiro...)
+      </label>
+      <div id="l-pgmix-box" style="display:none;margin-top:12px;border-top:1px dashed #fed7aa;padding-top:12px;">
+        <div style="font-size:12px;color:#78716c;margin-bottom:10px;">
+          Divida o valor total entre as formas de pagamento. Cada forma vira uma parcela do lançamento:
+          <b>dinheiro</b> e <b>cheque de cliente</b> já entram como pagos; o <b>cheque pré-datado</b> fica em
+          Contas a Pagar até a data “bom para”, quando você marca como pago.
+        </div>
+        <div id="l-pgmix-lista"></div>
+        <datalist id="l-pgmix-clientes"></datalist>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="pgMixAdd('Dinheiro')">+ Dinheiro</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="pgMixAdd('Cheque pré-datado')">+ Cheque pré-datado</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="pgMixAdd('Cheque de cliente')">+ Cheque de cliente</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="pgMixAdd('PIX')">+ Outra forma</button>
+          <span id="l-pgmix-resumo" style="margin-left:auto;font-size:12px;font-weight:700;padding:6px 12px;border-radius:6px;"></span>
+        </div>
+      </div>
+    </div>
     <!-- ══ CUSTO FIXO + VIGÊNCIAS ══ -->
     <div style="border:1px solid #e7e5e4;border-radius:8px;padding:12px 14px;margin-bottom:16px;background:#fcfcfb;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#44403c;margin:0;">
@@ -5992,13 +6015,16 @@ async function saveLancamento() {
   // Despesas/Fornecedor e Item são opcionais: despesas avulsas podem não ter
   // nenhum dos dois. Só data da compra e valor são realmente obrigatórios.
   if(!dtcompra || !valor) { alert('Preencha a data da competência e o valor.'); return; }
-  const pago = document.getElementById('l-pago').value;
-  const banco = document.getElementById('l-banco').value;
-  if (!validarBancoObrigatorio(pago, banco)) return;
+  const usaMix = !!(document.getElementById('l-pgmix') && document.getElementById('l-pgmix').checked);
+  const mix = usaMix ? pgMixMontar(valor) : null;
+  if (usaMix && !mix) return;
+  const pago = mix ? mix.pago : document.getElementById('l-pago').value;
+  const banco = mix ? mix.banco : document.getElementById('l-banco').value;
+  if (!mix && !validarBancoObrigatorio(pago, banco)) return;
   // Data do pagamento é obrigatória quando o lançamento já nasce pago — sem ela
   // a parcela cai em "Contas Pagas" sem data e some do fluxo de caixa por dia.
-  const dtpagoNovo = campoValor('l-dtpago');
-  if (!validarDataPagamentoObrigatoria(pago, dtpagoNovo, 'l-dtpago')) return;
+  const dtpagoNovo = mix ? mix.dtpago : campoValor('l-dtpago');
+  if (!mix && !validarDataPagamentoObrigatoria(pago, dtpagoNovo, 'l-dtpago')) return;
   // Custo fixo: se estiver marcado, precisa de pelo menos uma vigência.
   const ehCustoFixo = !!(document.getElementById('l-custofixo') && document.getElementById('l-custofixo').checked);
   if (ehCustoFixo && !(_vigTemp.l || []).length) {
@@ -6007,27 +6033,27 @@ async function saveLancamento() {
   }
   const empresa_id = empresaDoForm('l-empresa');
   if (empresa_id === null) return;
-  const parcelas = parseInt(document.getElementById('l-parcelas').value)||1;
+  const parcelas = mix ? mix.n : (parseInt(document.getElementById('l-parcelas').value)||1);
   const lanc = {
     id: uid(),
     empresa_id,
     dtcompra,
-    dtprev: document.getElementById('l-dtprev').value,
+    dtprev: mix ? mix.dtprev : document.getElementById('l-dtprev').value,
     nf: document.getElementById('l-nf').value,
     forn, prod, valor,
     parcelas,
     financeiro: document.getElementById('l-financeiro').value,
     pago,
-    tipo_pag: document.getElementById('l-tipo-pag').value,
+    tipo_pag: mix ? 'Misto' : document.getElementById('l-tipo-pag').value,
     banco,
     cat_dre: document.getElementById('l-catdre') ? document.getElementById('l-catdre').value : '',
     obs: document.getElementById('l-obs').value,
     dtpago: pago === 'sim' ? dtpagoNovo : '',
-    parcela_datas: parcelas > 1 ? buildParcelaDatasPayload('l-parcela-dates', parcelas) : null
+    parcela_datas: mix ? mix.parcela_datas : (parcelas > 1 ? buildParcelaDatasPayload('l-parcela-dates', parcelas) : null)
   };
   // Parcelado que já nasce pago: todas as parcelas recebem a data informada,
   // senão elas continuariam aparecendo em aberto em "Contas a Pagar".
-  if (parcelas > 1 && pago === 'sim') {
+  if (!mix && parcelas > 1 && pago === 'sim') {
     lanc.parcela_datas = _marcarTodasParcelasPagas(lanc.parcela_datas, parcelas, dtpagoNovo);
   }
   const rL = await sbFetch('lancamentos', 'POST', lanc);
@@ -6063,6 +6089,10 @@ function clearLancamento() {
   try { set('l-empresa', empresaAtual() || ''); } catch(e) { set('l-empresa',''); }
   set('l-dtpago','');
   limparGradeParcelas('l-parcela-dates');
+  const mixChk = document.getElementById('l-pgmix');
+  if (mixChk) mixChk.checked = false;
+  _pgMix = [];
+  togglePgMix();
   const cfChk = document.getElementById('l-custofixo');
   if (cfChk) cfChk.checked = false;
   _vigTemp.l = [];
@@ -6302,9 +6332,10 @@ function _buildParcelas() {
   const parcelas = [];
   db.lancamentos.forEach(l => {
     const n = l.parcelas || 1;
-    const { datas: manualDates, valores: manualValores, pagos, dtpagos } = _parseParcelas(l.parcela_datas);
+    const { datas: manualDates, valores: manualValores, pagos, dtpagos, formas } = _parseParcelas(l.parcela_datas);
     for(let i=1; i<=n; i++) {
       const venc = (manualDates[i-1]) ? manualDates[i-1] : parcelaVencimento(l.dtprev, i, n);
+      const fp = formas[i-1] || null;   // detalhe da forma (pagamento em várias formas)
       // Cada parcela tem seu próprio status de pagamento (array "pagos"/"dtpagos"
       // guardado dentro de parcela_datas). Isso evita que marcar 1 parcela como
       // paga afete as demais parcelas do mesmo lançamento.
@@ -6325,8 +6356,10 @@ function _buildParcelas() {
         dtpago,
         nf: l.nf,
         financeiro: l.financeiro,
-        banco: l.banco || '',
-        tipoPag: l.tipo_pag || '',
+        banco: (fp && fp.banco) || l.banco || '',
+        tipoPag: (fp && fp.forma) || l.tipo_pag || '',
+        cheque: (fp && fp.cheque) || '',
+        emitente: (fp && fp.emitente) || '',
         juros: l.juros ?? null,
         catId,
         parcIdx: i,
@@ -6958,7 +6991,7 @@ function renderApagar() {
       : `<span class="badge badge-gray" style="cursor:pointer" onclick="abrirEditarCategoriaPago('${p.lancId}','')" title="Clique para definir a categoria">Sem categoria ✎</span>`;
     return `<tr>
       <td>${getFornNome(p.forn)}</td>
-      <td>${p.prod ? getProdNome(p.prod) : '—'}</td>
+      <td>${p.prod ? getProdNome(p.prod) : '—'}${_infoFormaParcela(p)}</td>
       <td>${catCell}</td>
       <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
       <td style="font-family:DM Mono,monospace">${fmtBRL(p.valParc)}</td>
@@ -6982,9 +7015,11 @@ function marcarPago(id, parcIdx) {
   document.getElementById('modal-pago-parc').value = parcIdx || 1;
   document.getElementById('modal-pago-data').value = today();
   const selPagForma = document.getElementById('modal-pago-tipo-pag');
-  selPagForma.innerHTML = _montarOptsFormas(getFormasPagamento(), l.tipo_pag || '', '+ Cadastrar nova forma de pagamento...');
-  selPagForma.value = l.tipo_pag || '';
-  document.getElementById('modal-pago-banco').value = l.banco || '';
+  const fp = (_parseParcelas(l.parcela_datas).formas || [])[(parcIdx || 1) - 1] || null;
+  const formaIni = (fp && fp.forma) || l.tipo_pag || '';
+  selPagForma.innerHTML = _montarOptsFormas(getFormasPagamento(), formaIni, '+ Cadastrar nova forma de pagamento...');
+  selPagForma.value = formaIni;
+  document.getElementById('modal-pago-banco').value = (fp && fp.banco) || l.banco || '';
   openModal('modal-pago');
 }
 
@@ -7015,21 +7050,32 @@ async function confirmarPago() {
   const n = l.parcelas || 1;
   // Guarda o estado anterior para poder reverter caso a gravação no banco falhe.
   const anterior = { banco: l.banco, tipo_pag: l.tipo_pag, parcela_datas: l.parcela_datas, pago: l.pago, dtpago: l.dtpago };
-  l.banco = banco;
-  l.tipo_pag = tipoPag;
+  // Pagamento em várias formas: banco/forma ficam na própria parcela, para
+  // não trocar o banco das outras parcelas (dinheiro, cheque de cliente...).
+  const ehMisto = n > 1 && (_parseParcelas(l.parcela_datas).formas || []).length > 0;
+  if (!ehMisto) {
+    l.banco = banco;
+    l.tipo_pag = tipoPag;
+  }
 
   let ok;
   if (n > 1) {
     // Lançamento parcelado: marca só a parcela selecionada, guardando o status
     // por parcela dentro de parcela_datas para não afetar as demais parcelas.
     l.parcela_datas = _setParcelaPagoStatus(l, parcIdx, true, dtpago);
+    if (ehMisto) {
+      const obj = JSON.parse(l.parcela_datas);
+      obj.formas = obj.formas || [];
+      obj.formas[parcIdx - 1] = Object.assign({}, obj.formas[parcIdx - 1] || {}, { banco, forma: tipoPag || (obj.formas[parcIdx - 1] || {}).forma || '' });
+      l.parcela_datas = JSON.stringify(obj);
+    }
     const { pagos } = _parseParcelas(l.parcela_datas);
     const todasPagas = pagos.slice(0, n).every(p => p === true);
     // l.pago/l.dtpago (nível do lançamento) só refletem "tudo pago", para
     // manter compatibilidade com Dashboard/DFC, que ainda leem esses campos.
     l.pago = todasPagas ? 'sim' : 'nao';
     l.dtpago = todasPagas ? dtpago : '';
-    ok = await sbFetch('lancamentos', 'PATCH', {parcela_datas: l.parcela_datas, pago: l.pago, dtpago: l.dtpago, banco, tipo_pag: tipoPag}, `?id=eq.${id}`);
+    ok = await sbFetch('lancamentos', 'PATCH', {parcela_datas: l.parcela_datas, pago: l.pago, dtpago: l.dtpago, banco: l.banco || '', tipo_pag: l.tipo_pag || ''}, `?id=eq.${id}`);
   } else {
     l.pago = 'sim';
     l.dtpago = dtpago;
@@ -7598,7 +7644,7 @@ function renderPagas() {
       : `<span class="badge badge-gray" style="cursor:pointer" onclick="abrirEditarCategoriaPago('${p.lancId}','')" title="Clique para definir a categoria">Sem categoria ✎</span>`;
     return `<tr>
       <td>${getFornNome(p.forn)}</td>
-      <td>${p.prod ? getProdNome(p.prod) : '—'}</td>
+      <td>${p.prod ? getProdNome(p.prod) : '—'}${_infoFormaParcela(p)}</td>
       <td>${catCell}</td>
       <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
       <td style="font-family:DM Mono,monospace">${fmtBRL(p.valParc)}</td>
@@ -9047,18 +9093,190 @@ function syncTotalParcelaValores(containerid, n, selectId) {
 // Formato novo:  { datas: [...], valores: [...] }
 // Formato legado (array simples de datas): continua sendo lido corretamente.
 
+
+// ══════════════════════════════════════════════════════════════════════
+// PAGAMENTO EM VÁRIAS FORMAS (Novo Lançamento — Pagamento)
+// ----------------------------------------------------------------------
+// Ex.: compra de R$ 10.000 paga com R$ 2.000 em dinheiro, R$ 3.000 em um
+// cheque de cliente e R$ 5.000 em cheque pré-datado para 30 dias.
+// Cada forma vira uma parcela do lançamento (mesmo mecanismo das parcelas
+// já existentes), com status de pagamento, banco/conta e dados do cheque
+// próprios — guardados em parcela_datas.formas. Sem coluna nova no banco.
+// ══════════════════════════════════════════════════════════════════════
+var _pgMix = [];
+
+document.addEventListener('input', e => { if (e.target && e.target.id === 'l-valor' && document.getElementById('l-pgmix') && document.getElementById('l-pgmix').checked) _pgMixResumo(); });
+function _pgMixPagoPadrao(forma) { return forma !== 'Cheque pré-datado'; }
+
+function togglePgMix() {
+  const chk = document.getElementById('l-pgmix');
+  const on = !!(chk && chk.checked);
+  const box = document.getElementById('l-pgmix-box');
+  if (box) box.style.display = on ? '' : 'none';
+  // Esconde os campos que deixam de valer (parcelas, pago, forma e banco únicos)
+  const grupo = id => { const el = document.getElementById(id); return el ? el.closest('.form-group') : null; };
+  [grupo('l-parcelas'), grupo('l-pago')].forEach(el => { if (el) el.style.display = on ? 'none' : ''; });
+  const linhaForma = document.getElementById('l-tipo-pag');
+  if (linhaForma && linhaForma.closest('.grid3')) linhaForma.closest('.grid3').style.display = on ? 'none' : '';
+  const dtw = document.getElementById('l-dtpago-wrap');
+  if (on && dtw) dtw.style.display = 'none';
+  if (!on) toggleDtPago('l', false);
+  const pd = document.getElementById('l-parcela-dates');
+  if (on) { if (pd) pd.style.display = 'none'; }
+  else toggleParcelaDates('l-parcelas', 'l-parcela-dates');
+  if (on && !_pgMix.length) {
+    const total = parseFloat(campoValor('l-valor')) || 0;
+    _pgMix = [{ forma: 'Dinheiro', valor: total ? total.toFixed(2) : '', data: today(), banco: '', cheque: '', emitente: '', pago: true }];
+  }
+  if (on) {
+    const dl = document.getElementById('l-pgmix-clientes');
+    if (dl) dl.innerHTML = (db.clientes || []).map(c => `<option value="${esc(c.nome)}"></option>`).join('');
+  }
+  renderPgMix();
+}
+
+function _pgMixRestante() {
+  const total = parseFloat(campoValor('l-valor')) || 0;
+  const soma = _pgMix.reduce((a, r) => a + (parseFloat(r.valor) || 0), 0);
+  return Math.round((total - soma) * 100) / 100;
+}
+
+function pgMixAdd(forma) {
+  const resto = _pgMixRestante();
+  const base = campoValor('l-dtprev') || today();
+  _pgMix.push({
+    forma,
+    valor: resto > 0 ? resto.toFixed(2) : '',
+    data: forma === 'Cheque pré-datado' ? _addDias(base, 30) : today(),
+    banco: '', cheque: '', emitente: '',
+    pago: _pgMixPagoPadrao(forma)
+  });
+  renderPgMix();
+}
+
+function pgMixDel(i) { _pgMix.splice(i, 1); renderPgMix(); }
+
+function pgMixSet(i, campo, valor) {
+  const r = _pgMix[i]; if (!r) return;
+  r[campo] = valor;
+  if (campo === 'forma') {
+    r.pago = _pgMixPagoPadrao(valor);
+    if (valor === 'Cheque pré-datado' && r.data === today()) r.data = _addDias(campoValor('l-dtprev') || today(), 30);
+    renderPgMix();
+    return;
+  }
+  if (campo === 'pago') { renderPgMix(); return; }
+  _pgMixResumo();
+}
+
+function _pgMixResumo() {
+  const el = document.getElementById('l-pgmix-resumo');
+  if (!el) return;
+  const total = parseFloat(campoValor('l-valor')) || 0;
+  const soma = _pgMix.reduce((a, r) => a + (parseFloat(r.valor) || 0), 0);
+  const resto = Math.round((total - soma) * 100) / 100;
+  const ok = Math.abs(resto) < 0.01 && total > 0;
+  el.textContent = `Formas: ${fmtBRL(soma)} de ${fmtBRL(total)}` + (ok ? ' ✓' : (resto > 0 ? ` — faltam ${fmtBRL(resto)}` : ` — passou ${fmtBRL(-resto)}`));
+  el.style.color = ok ? '#166534' : '#b91c1c';
+  el.style.background = ok ? '#dcfce7' : '#fee2e2';
+}
+
+function renderPgMix() {
+  const cont = document.getElementById('l-pgmix-lista');
+  if (!cont) return;
+  const formas = getFormasPagamento();
+  const bancos = '<option value="">Banco / Conta...</option>' + (db.bancos || []).map(b => `<option value="${b.id}">${esc(b.nome)}</option>`).join('');
+  cont.innerHTML = _pgMix.map((r, i) => {
+    const ehCheque = /cheque/i.test(r.forma || '');
+    const ehCli = r.forma === 'Cheque de cliente';
+    const ehPre = r.forma === 'Cheque pré-datado';
+    const optsForma = formas.concat(formas.includes(r.forma) ? [] : [r.forma])
+      .map(f => `<option value="${esc(f)}" ${f === r.forma ? 'selected' : ''}>${esc(f)}</option>`).join('');
+    const selBanco = bancos.replace(`value="${r.banco}"`, `value="${r.banco}" selected`);
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:end;padding:10px;border:1px solid #e7e5e4;border-left:3px solid ${r.pago ? '#16a34a' : '#d97706'};border-radius:8px;background:#fff;margin-bottom:8px;">
+      <div class="form-group" style="margin:0"><label>Forma</label>
+        <select onchange="pgMixSet(${i},'forma',this.value)">${optsForma}</select></div>
+      <div class="form-group" style="margin:0"><label>Valor (R$)</label>
+        <input type="number" step="0.01" min="0" value="${r.valor}" oninput="pgMixSet(${i},'valor',this.value)" /></div>
+      <div class="form-group" style="margin:0"><label>${ehPre ? 'Bom para' : (r.pago ? 'Data do pagamento' : 'Vencimento')}</label>
+        <input type="date" value="${r.data}" onchange="pgMixSet(${i},'data',this.value)" /></div>
+      <div class="form-group" style="margin:0"><label>Banco / Conta${r.pago ? ' *' : ''}</label>
+        <select onchange="pgMixSet(${i},'banco',this.value)">${selBanco}</select></div>
+      ${ehCheque ? `<div class="form-group" style="margin:0"><label>Nº do cheque</label>
+        <input type="text" value="${esc(r.cheque)}" placeholder="000123" oninput="pgMixSet(${i},'cheque',this.value)" /></div>` : ''}
+      ${ehCli ? `<div class="form-group" style="margin:0"><label>Cliente / emitente</label>
+        <input type="text" list="l-pgmix-clientes" value="${esc(r.emitente)}" placeholder="Quem emitiu o cheque" oninput="pgMixSet(${i},'emitente',this.value)" /></div>` : ''}
+      <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin:0;cursor:pointer;">
+          <input type="checkbox" ${r.pago ? 'checked' : ''} onchange="pgMixSet(${i},'pago',this.checked)" style="width:auto;margin:0;accent-color:#16a34a" /> Já pago</label>
+        <button type="button" class="btn btn-secondary btn-sm" style="color:#b91c1c" onclick="pgMixDel(${i})" title="Remover esta forma">✕</button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:#a8a29e;padding:6px 0">Nenhuma forma incluída. Use os botões abaixo.</div>';
+  _pgMixResumo();
+}
+
+// Valida e monta o que vai para o lançamento. Retorna null se houver erro.
+function pgMixMontar(valorTotal) {
+  const linhas = _pgMix.map(r => Object.assign({}, r, { valor: Math.round((parseFloat(r.valor) || 0) * 100) / 100 }));
+  if (linhas.length < 2) { alert('No pagamento em várias formas, inclua pelo menos duas formas.\n\nSe for uma forma só, desmarque a opção e use os campos normais.'); return null; }
+  for (let i = 0; i < linhas.length; i++) {
+    const r = linhas[i], n = i + 1;
+    if (!r.forma) { alert(`Forma ${n}: escolha a forma de pagamento.`); return null; }
+    if (!(r.valor > 0)) { alert(`Forma ${n} (${r.forma}): informe um valor maior que zero.`); return null; }
+    if (!r.data) { alert(`Forma ${n} (${r.forma}): informe a data.`); return null; }
+    if (r.pago && !r.banco) { alert(`Forma ${n} (${r.forma}): selecione o banco/conta. Todo pagamento já feito precisa de um banco/conta vinculado (use a conta “Caixa” para dinheiro, se tiver).`); return null; }
+  }
+  const soma = Math.round(linhas.reduce((a, r) => a + r.valor, 0) * 100) / 100;
+  if (Math.abs(soma - valorTotal) >= 0.01) {
+    alert(`A soma das formas (${fmtBRL(soma)}) precisa ser igual ao Valor Total (${fmtBRL(valorTotal)}).`);
+    return null;
+  }
+  // Ordena por data para as parcelas ficarem em ordem cronológica
+  linhas.sort((a, b) => a.data.localeCompare(b.data));
+  const todasPagas = linhas.every(r => r.pago);
+  const datasPagas = linhas.filter(r => r.pago).map(r => r.data).sort();
+  const pd = {
+    datas:   linhas.map(r => r.data),
+    valores: linhas.map(r => r.valor),
+    pagos:   linhas.map(r => !!r.pago),
+    dtpagos: linhas.map(r => r.pago ? r.data : ''),
+    formas:  linhas.map(r => ({ forma: r.forma, banco: r.banco || '', cheque: (r.cheque || '').trim(), emitente: (r.emitente || '').trim() }))
+  };
+  const primeiroComBanco = linhas.find(r => r.banco);
+  return {
+    n: linhas.length,
+    pago: todasPagas ? 'sim' : 'nao',
+    dtpago: todasPagas ? datasPagas[datasPagas.length - 1] : '',
+    banco: primeiroComBanco ? primeiroComBanco.banco : '',
+    dtprev: linhas[0].data,
+    parcela_datas: JSON.stringify(pd)
+  };
+}
+
+// Linha extra nas tabelas de Contas a Pagar / Pagas com o detalhe do cheque
+function _infoFormaParcela(p) {
+  if (!p || (!p.cheque && !p.emitente)) return '';
+  const partes = [p.tipoPag || 'Cheque'];
+  if (p.cheque) partes.push('nº ' + p.cheque);
+  if (p.emitente) partes.push(p.emitente);
+  return `<br><span style="font-size:11px;color:#9a3412">🧾 ${esc(partes.join(' · '))}</span>`;
+}
+
 function _parseParcelas(raw) {
   // Retorna { datas: [...], valores: [...], pagos: [...], dtpagos: [...] } independente do formato salvo
-  if (!raw) return { datas: [], valores: [], pagos: [], dtpagos: [] };
+  if (!raw) return { datas: [], valores: [], pagos: [], dtpagos: [], formas: [] };
   const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
-  if (Array.isArray(obj)) return { datas: obj, valores: [], pagos: [], dtpagos: [] }; // legado
-  return { datas: obj.datas || [], valores: obj.valores || [], pagos: obj.pagos || [], dtpagos: obj.dtpagos || [] };
+  if (Array.isArray(obj)) return { datas: obj, valores: [], pagos: [], dtpagos: [], formas: [] }; // legado
+  // "formas": detalhes por parcela no pagamento em várias formas
+  // ({ forma, banco, cheque, emitente }) — opcional.
+  return { datas: obj.datas || [], valores: obj.valores || [], pagos: obj.pagos || [], dtpagos: obj.dtpagos || [], formas: obj.formas || [] };
 }
 
 // Atualiza o status de pagamento de UMA parcela específica dentro do JSON
 // unificado salvo em parcela_datas, preservando datas/valores já existentes.
 function _setParcelaPagoStatus(l, parcIdx, pago, dtpago) {
-  const { datas, valores, pagos, dtpagos } = _parseParcelas(l.parcela_datas);
+  const { datas, valores, pagos, dtpagos, formas } = _parseParcelas(l.parcela_datas);
   const n = l.parcelas || 1;
   const novosPagos = pagos.slice(0, n);
   const novosDtpagos = dtpagos.slice(0, n);
@@ -9066,7 +9284,9 @@ function _setParcelaPagoStatus(l, parcIdx, pago, dtpago) {
   while (novosDtpagos.length < n) novosDtpagos.push('');
   novosPagos[parcIdx - 1] = pago;
   novosDtpagos[parcIdx - 1] = pago ? dtpago : '';
-  return JSON.stringify({ datas, valores, pagos: novosPagos, dtpagos: novosDtpagos });
+  const out = { datas, valores, pagos: novosPagos, dtpagos: novosDtpagos };
+  if (formas && formas.length) out.formas = formas;
+  return JSON.stringify(out);
 }
 
 function getManualParcelaDates(containerid, n) {
@@ -12328,7 +12548,7 @@ var formasRecebExtra = [];
 var motivosCancelExtra = [];
 var motivosRepoExtra = [];
 
-function getFormasPagamento()   { return FORMAS_PADRAO.concat(formasPagExtra); }
+function getFormasPagamento()   { return FORMAS_PADRAO.concat(['Cheque pré-datado','Cheque de cliente'], formasPagExtra); }
 function getFormasRecebimento() { return FORMAS_PADRAO.concat(formasRecebExtra); }
 
 function _montarOptsFormas(lista, valorAtual, rotuloNovo) {
@@ -15199,26 +15419,29 @@ function validarDataPagamentoObrigatoria(pago, dtpago, campoId) {
 // Marca todas as parcelas de um lançamento como pagas na mesma data.
 // Usado quando o lançamento já é criado/editado como "Pago".
 function _marcarTodasParcelasPagas(raw, n, dtpago) {
-  const { datas, valores } = _parseParcelas(raw);
-  return JSON.stringify({
+  const { datas, valores, formas } = _parseParcelas(raw);
+  const out = {
     datas:   datas.slice(0, n),
     valores: valores.slice(0, n),
     pagos:   new Array(n).fill(true),
     dtpagos: new Array(n).fill(dtpago)
-  });
+  };
+  if (formas && formas.length) out.formas = formas.slice(0, n);
+  return JSON.stringify(out);
 }
 
 // Reconstrói parcela_datas a partir do formulário SEM perder o status de
 // pagamento de cada parcela, que fica no mesmo campo.
 function buildParcelaDatasPreservando(containerid, n, rawAntigo) {
   const novo = buildParcelaDatasPayload(containerid, n);
-  const { pagos, dtpagos } = _parseParcelas(rawAntigo);
-  if (!pagos.length && !dtpagos.length) return novo;
+  const { pagos, dtpagos, formas } = _parseParcelas(rawAntigo);
+  if (!pagos.length && !dtpagos.length && !formas.length) return novo;
   let base;
   try { base = novo ? JSON.parse(novo) : { datas: [], valores: [] }; }
   catch(e) { base = { datas: [], valores: [] }; }
   base.pagos   = pagos.slice(0, n);
   base.dtpagos = dtpagos.slice(0, n);
+  if (formas.length) base.formas = formas.slice(0, n);
   return JSON.stringify(base);
 }
 
@@ -15405,7 +15628,7 @@ function clearCustosFixosFiltros() {
 
 
 // ── Marcador de versão (para confirmar qual arquivo está no ar) ──
-window.APP_BUILD = '2026-10-16a · madeireira-nones · romaneio-edicao-rapida';
+window.APP_BUILD = '2026-10-20a · madeireira-nones · pagamento-varias-formas';
 (function(){ var b = document.getElementById('sidebar-build'); if (b) b.textContent = 'build ' + window.APP_BUILD; })();
 
 // Fechar modais clicando fora
@@ -15666,7 +15889,7 @@ function _acharParcela(lancId, parcIdx) {
 // Grava a data de vencimento de UMA parcela dentro do JSON parcela_datas,
 // sem perder valores/status das demais.
 function _setParcelaDataVenc(l, parcIdx, novaData) {
-  const { datas, valores, pagos, dtpagos } = _parseParcelas(l.parcela_datas);
+  const { datas, valores, pagos, dtpagos, formas } = _parseParcelas(l.parcela_datas);
   const n = l.parcelas || 1;
   const nd = datas.slice(0, n), nv = valores.slice(0, n), np = pagos.slice(0, n), ndt = dtpagos.slice(0, n);
   while (nd.length  < n) nd.push(null);
@@ -15676,7 +15899,9 @@ function _setParcelaDataVenc(l, parcIdx, novaData) {
   // mantém as datas já calculadas das outras parcelas para nada "sumir"
   for (let i = 0; i < n; i++) if (!nd[i]) nd[i] = parcelaVencimentoReceber(l.dtprev, i+1);
   nd[parcIdx-1] = novaData;
-  return JSON.stringify({ datas: nd, valores: nv, pagos: np, dtpagos: ndt });
+  const out = { datas: nd, valores: nv, pagos: np, dtpagos: ndt };
+  if (formas && formas.length) out.formas = formas;
+  return JSON.stringify(out);
 }
 
 function abrirPrevisaoCobranca(lancId, parcIdx) {

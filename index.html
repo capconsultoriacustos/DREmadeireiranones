@@ -124,6 +124,18 @@ body.menu-oculto .main { padding-top:60px; }
 .page-title { font-size:20px; font-weight:700; margin-bottom:4px; color:#1f2937; }
 .page-sub { font-size:13px; color:var(--text2); margin-bottom:28px; }
 
+/* ── BUSCA DE CLIENTES ── */
+.cli-busca-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.cli-busca { position:relative; flex:1; min-width:260px; max-width:520px; }
+.cli-busca svg { position:absolute; left:13px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#a8a29e; pointer-events:none; }
+.cli-busca input { width:100%; padding:11px 38px 11px 40px; font-size:14px; background:#fff; border:1.5px solid #e7e5e4; border-radius:10px; transition:border-color .15s, box-shadow .15s; }
+.cli-busca input:focus { outline:none; border-color:#ea580c; box-shadow:0 0 0 3px rgba(234,88,12,.12); }
+.cli-busca-x { position:absolute; right:8px; top:50%; transform:translateY(-50%); width:24px; height:24px; border:none; border-radius:6px; background:#f5f4f2; color:#78716c; cursor:pointer; font-size:15px; line-height:1; display:none; }
+.cli-busca-x:hover { background:#fff1e6; color:#ea580c; }
+.cli-busca-cont { font-size:12px; color:#78716c; white-space:nowrap; }
+.cli-busca-cont b { color:#1f2937; }
+mark.cli-hl { background:#ffedd5; color:#9a3412; padding:0 1px; border-radius:3px; }
+
 /* ── CARDS / TABLES ── */
 .card { background:#fff; border:1px solid var(--border); border-radius:var(--radius2); padding:24px; margin-bottom:20px; box-shadow:0 1px 4px rgba(26,62,122,0.06); }
 .card-title { font-size:11px; font-weight:600; margin-bottom:16px; color:#a8a29e; text-transform:uppercase; letter-spacing:.6px; }
@@ -1639,6 +1651,15 @@ td.lr-edit input { width:100%; min-width:90px; padding:4px 6px; font-size:12px; 
       </div><!-- /form-panel cli -->
       <div class="card" style="margin-top:16px">
         <div class="card-title">Clientes Cadastrados</div>
+        <div class="cli-busca-bar">
+          <div class="cli-busca">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="cli-busca" placeholder="Buscar cliente pelo nome…" autocomplete="off" aria-label="Buscar cliente pelo nome"
+              oninput="renderClientes()" onkeydown="if(event.key==='Escape'){limparBuscaClientes()}" />
+            <button type="button" class="cli-busca-x" id="cli-busca-x" onclick="limparBuscaClientes()" title="Limpar busca (Esc)" aria-label="Limpar busca">&times;</button>
+          </div>
+          <span class="cli-busca-cont" id="cli-busca-cont"></span>
+        </div>
         <div class="table-scroll"><table><thead><tr id="th-clientes-row">
           <th>Código</th><th>Nome</th><th>CPF/CNPJ</th><th>Contato</th><th>Telefone</th><th>Categoria</th><th>Ações</th>
         </tr></thead><tbody id="tb-clientes"><tr><td colspan="7" class="empty-state">Nenhum cliente cadastrado.</td></tr></tbody></table></div>
@@ -9672,11 +9693,31 @@ function renderClientes() {
     { key:'cat', label:'Categoria', get:c=>c.cat||null },
     { key:'acoes', label:'Ações', get:()=>'', noFilter:true }
   ];
-  const listCli = efMount('clientes','th-clientes-row',colsCli,db.clientes,renderClientes);
-  if(!listCli.length){ tb.innerHTML='<tr><td colspan="7" class="empty-state">Nenhum cliente cadastrado.</td></tr>'; return; }
+  const buscaEl = document.getElementById('cli-busca');
+  const termoBruto = buscaEl ? buscaEl.value.trim() : '';
+  const termo = normText(termoBruto);
+  const xBtn = document.getElementById('cli-busca-x');
+  if (xBtn) xBtn.style.display = termoBruto ? 'block' : 'none';
+  // Busca pelo nome, ignorando acentos e maiúsculas; quem COMEÇA com o termo vem primeiro
+  let baseCli = db.clientes;
+  if (termo) {
+    baseCli = db.clientes.filter(c => normText(c.nome).includes(termo));
+    baseCli.sort((a,b) => (normText(a.nome).startsWith(termo)?0:1) - (normText(b.nome).startsWith(termo)?0:1));
+  }
+  const listCli = efMount('clientes','th-clientes-row',colsCli,baseCli,renderClientes);
+  const cont = document.getElementById('cli-busca-cont');
+  if (cont) cont.innerHTML = termo
+    ? `<b>${listCli.length}</b> de ${db.clientes.length} cliente(s) encontrado(s)`
+    : `<b>${db.clientes.length}</b> cliente(s) cadastrado(s)`;
+  if(!listCli.length){
+    tb.innerHTML = termo
+      ? `<tr><td colspan="7" class="empty-state">Nenhum cliente encontrado para “${esc(termoBruto)}”.</td></tr>`
+      : '<tr><td colspan="7" class="empty-state">Nenhum cliente cadastrado.</td></tr>';
+    return;
+  }
   tb.innerHTML=listCli.map(cl=>`<tr>
     <td style="font-family:DM Mono,monospace;font-size:12px">${cl.codigo||'—'}</td>
-    <td><b>${cl.nome}</b></td>
+    <td><b>${_destacarBusca(cl.nome, termo)}</b></td>
     <td style="font-family:DM Mono,monospace;font-size:12px">${cl.cnpj||'—'}</td>
     <td>${cl.contato||'—'}</td><td>${cl.tel||'—'}</td>
     <td>${cl.cat?`<span class="badge badge-blue">${cl.cat}</span>`:'—'}</td>
@@ -9684,6 +9725,19 @@ function renderClientes() {
       <button class="btn btn-secondary btn-sm" onclick="editCliente('${cl.id}')">Editar</button>
       <button class="btn btn-danger btn-sm" onclick="deleteCliente('${cl.id}')">Excluir</button>
     </td></tr>`).join('');
+}
+// Destaca o trecho buscado no nome (sem considerar acentos/maiúsculas)
+function _destacarBusca(texto, termo) {
+  const t = String(texto || '');
+  if (!termo) return esc(t);
+  const i = normText(t).indexOf(termo);
+  if (i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark class="cli-hl">' + esc(t.slice(i, i + termo.length)) + '</mark>' + esc(t.slice(i + termo.length));
+}
+function limparBuscaClientes() {
+  const el = document.getElementById('cli-busca');
+  if (el) { el.value = ''; el.focus(); }
+  renderClientes();
 }
 function editCliente(id) {
   const cl=db.clientes.find(x=>x.id===id); if(!cl) return;

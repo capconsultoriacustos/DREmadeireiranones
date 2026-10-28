@@ -2019,6 +2019,9 @@ td.lr-edit input { width:100%; min-width:90px; padding:4px 6px; font-size:12px; 
               <option value="aberto">Todas em aberto</option>
             </select>
           </div>
+          <div class="form-group"><label>Código do Cliente</label>
+            <input type="text" id="cob-codigo" oninput="renderCobranca()" placeholder="Ex.: 070" style="width:120px" />
+          </div>
           <div class="form-group"><label>Buscar (cliente / NF / romaneio / produto)</label>
             <input type="text" id="cob-busca" oninput="renderCobranca()" placeholder="Digite para filtrar..." style="width:220px" />
           </div>
@@ -2032,11 +2035,11 @@ td.lr-edit input { width:100%; min-width:90px; padding:4px 6px; font-size:12px; 
 
         <div class="table-scroll" style="max-height:none">
           <table><thead><tr>
-            <th>Cliente</th><th>Produto</th><th>Parcela</th><th>Romaneio</th><th>Valor</th>
+            <th>Código</th><th>Cliente</th><th>Produto</th><th>Parcela</th><th>Romaneio</th><th>Valor</th>
             <th>Recebido</th><th>Saldo</th><th>Juros</th>
             <th>Previsão / Venc.</th><th>Atraso</th><th>Follow-up</th><th>Situação</th><th>Ações</th>
           </tr></thead><tbody id="tb-cobranca">
-            <tr><td colspan="13" class="empty-state">Nenhuma cobrança nesta semana.</td></tr>
+            <tr><td colspan="14" class="empty-state">Nenhuma cobrança nesta semana.</td></tr>
           </tbody></table>
         </div>
       </div>
@@ -15809,7 +15812,7 @@ function navMesCobranca(passo) {
   renderCobranca();
 }
 function clearCobrancaFiltros() {
-  ['cob-cliente','cob-busca','cob-atraso-min','cob-tipodoc'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['cob-cliente','cob-codigo','cob-busca','cob-atraso-min','cob-tipodoc'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cob-situacao').value = 'atraso';
   document.getElementById('cob-escopo').value = 'mes';
   document.getElementById('cob-ano').value = new Date().getFullYear();
@@ -15831,6 +15834,7 @@ function renderCobranca() {
   const cliente  = document.getElementById('cob-cliente').value;
   const situacao = document.getElementById('cob-situacao').value || 'atraso';
   const busca    = (document.getElementById('cob-busca').value || '').trim().toLowerCase();
+  const codFiltro = normText((document.getElementById('cob-codigo') || {}).value || '');
   const atrasoMin = parseInt(document.getElementById('cob-atraso-min').value);
   const tipoDocCob = document.getElementById('cob-tipodoc') ? document.getElementById('cob-tipodoc').value : '';
 
@@ -15843,6 +15847,7 @@ function renderCobranca() {
   const hoje = today();
   const list = getParcelasReceber(false).filter(p => {
     if (cliente && p.cliente !== cliente) return false;
+    if (codFiltro && !normText(getClienteCodigo(p.cliente)).includes(codFiltro)) return false;
     if (tipoDocCob && getClienteDocTipo(p.cliente) !== tipoDocCob) return false;
     if (_cobEmAdvogado(p.lancId, p.parcIdx)) return false;   // está com o advogado
     // Saldo zerado = parcela paga: nunca aparece na cobrança.
@@ -15876,7 +15881,7 @@ function renderCobranca() {
 
   const tb = document.getElementById('tb-cobranca');
   if (!list.length) {
-    tb.innerHTML = `<tr><td colspan="13" class="empty-state">Nenhuma cobrança ${escopo==='mes' ? 'neste mês' : 'pendente'} com os filtros atuais. 🎉</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="14" class="empty-state">Nenhuma cobrança ${escopo==='mes' ? 'neste mês' : 'pendente'} com os filtros atuais. 🎉</td></tr>`;
     window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = [];
     return;
   }
@@ -15885,7 +15890,7 @@ function renderCobranca() {
   const porNome = (a,b) => getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente), 'pt-BR', { numeric: true });
   const ordenada = list.slice().sort((a,b) =>
     (a.venc || '9999-99-99').localeCompare(b.venc || '9999-99-99') || porNome(a,b));
-  const _c = _cortarLista(ordenada, 13);
+  const _c = _cortarLista(ordenada, 14);
   tb.innerHTML = _c.aviso + _c.itens.map(p => _linhaCobranca(p, hoje)).join('');
   window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = ordenada;
 }
@@ -15902,7 +15907,8 @@ function _linhaCobranca(p, hoje) {
   const ultimo = nFup ? reg.followups[nFup-1] : null;
 
   return `<tr>
-    <td><b>${esc(getClienteNome(p.cliente))}</b>${pago > 0 ? ' <span class="cob-tag-parcial">parcial</span>' : ''}</td>
+    <td style="font-family:DM Mono,monospace;font-size:12px">${esc(getClienteCodigo(p.cliente))||'—'}</td>
+    <td><b>${esc(getClienteNomePuro(p.cliente))}</b>${pago > 0 ? ' <span class="cob-tag-parcial">parcial</span>' : ''}</td>
     <td style="font-size:12px">${p.prod ? esc(getProdVendaNome(p.prod)) : '—'}</td>
     <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
     <td style="font-family:DM Mono,monospace;font-size:12px">${esc(p.romaneio)||'—'}</td>

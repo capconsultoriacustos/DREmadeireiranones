@@ -2034,7 +2034,7 @@ td.lr-edit input { width:100%; min-width:90px; padding:4px 6px; font-size:12px; 
         </div>
 
         <div class="table-scroll" style="max-height:none">
-          <table><thead><tr>
+          <table><thead><tr id="th-cobranca-row">
             <th>Código</th><th>Cliente</th><th>Produto</th><th>Parcela</th><th>Romaneio</th><th>Valor</th>
             <th>Recebido</th><th>Saldo</th><th>Juros</th>
             <th>Previsão / Venc.</th><th>Atraso</th><th>Follow-up</th><th>Situação</th><th>Ações</th>
@@ -2080,11 +2080,11 @@ td.lr-edit input { width:100%; min-width:90px; padding:4px 6px; font-size:12px; 
           <div style="align-self:flex-end"><button class="btn btn-secondary" onclick="clearCobrancaAdvogadoFiltros()">Limpar</button></div>
         </div>
         <div class="table-scroll" style="max-height:none">
-          <table><thead><tr>
-            <th>Cliente</th><th>Produto</th><th>Parcela</th><th>Romaneio</th><th>Valor</th><th>Recebido</th><th>Saldo</th><th>Juros</th>
+          <table><thead><tr id="th-cobranca-advogado-row">
+            <th>Código</th><th>Cliente</th><th>Produto</th><th>Parcela</th><th>Romaneio</th><th>Valor</th><th>Recebido</th><th>Saldo</th><th>Juros</th>
             <th>Vencimento</th><th>Atraso</th><th>Advogado</th><th>Enviado em</th><th>Follow-up</th><th>Ações</th>
           </tr></thead><tbody id="tb-cobranca-advogado">
-            <tr><td colspan="14" class="empty-state">Nenhuma parcela com advogado.</td></tr>
+            <tr><td colspan="15" class="empty-state">Nenhuma parcela com advogado.</td></tr>
           </tbody></table>
         </div>
       </div>
@@ -15845,7 +15845,7 @@ function renderCobranca() {
     (escopo === 'mes') ? (mes === 0 ? `Todos os meses de ${ano}` : `${meses[mes]} de ${ano}`) : 'Todas as pendências';
 
   const hoje = today();
-  const list = getParcelasReceber(false).filter(p => {
+  let list = getParcelasReceber(false).filter(p => {
     if (cliente && p.cliente !== cliente) return false;
     if (codFiltro && !normText(getClienteCodigo(p.cliente)).includes(codFiltro)) return false;
     if (tipoDocCob && getClienteDocTipo(p.cliente) !== tipoDocCob) return false;
@@ -15866,8 +15866,34 @@ function renderCobranca() {
     return true;
   });
 
-  // KPIs
   const saldoDe = p => Math.max(0, p.valParc - cobTotalBaixas(p.lancId, p.parcIdx));
+
+  // Ordem padrão: vencimento e depois cliente (o clique no cabeçalho sobrepõe)
+  const porNome = (a,b) => getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente), 'pt-BR', { numeric: true });
+  list.sort((a,b) => (a.venc || '9999-99-99').localeCompare(b.venc || '9999-99-99') || porNome(a,b));
+
+  // Classificar/filtrar direto no cabeçalho
+  const _atrasoDe = p => (p.venc && p.venc < hoje) ? diffDias(p.venc, hoje) : 0;
+  const colsCob = [
+    { key:'codcli',    label:'Código',           get:p=>getClienteCodigo(p.cliente)||null },
+    { key:'cliente',   label:'Cliente',          get:p=>getClienteNomePuro(p.cliente) },
+    { key:'prod',      label:'Produto',          get:p=>p.prod?getProdVendaNome(p.prod):null },
+    { key:'parcela',   label:'Parcela',          get:p=>p.parcIdx+(p.totalParc/1000), display:p=>`${p.parcIdx}/${p.totalParc}` },
+    { key:'romaneio',  label:'Romaneio',         get:p=>p.romaneio||null },
+    { key:'valor',     label:'Valor',            get:p=>p.valParc, display:p=>fmtBRL(p.valParc) },
+    { key:'recebido',  label:'Recebido',         get:p=>cobTotalBaixas(p.lancId,p.parcIdx), display:p=>fmtBRL(cobTotalBaixas(p.lancId,p.parcIdx)) },
+    { key:'saldo',     label:'Saldo',            get:p=>saldoDe(p), display:p=>fmtBRL(saldoDe(p)) },
+    { key:'juros',     label:'Juros',            get:p=>calcJuros(saldoDe(p),p.venc,p.juros!=null?p.juros:getJurosGlobal()),
+      display:p=>{ const v=calcJuros(saldoDe(p),p.venc,p.juros!=null?p.juros:getJurosGlobal()); return v>0?fmtBRL(v):'—'; } },
+    { key:'venc',      label:'Previsão / Venc.', get:p=>p.venc, display:p=>fmtDate(p.venc) },
+    { key:'atraso',    label:'Atraso',           get:p=>_atrasoDe(p), display:p=>_atrasoDe(p)+'d' },
+    { key:'followup',  label:'Follow-up',        get:p=>(cobGet(p.lancId,p.parcIdx).followups||[]).length },
+    { key:'situacao',  label:'Situação',         get:p=>situacaoParcela(p.venc).label },
+    { key:'acoes',     label:'Ações',            get:()=>'', noFilter:true }
+  ];
+  list = efMount('cobranca','th-cobranca-row',colsCob,list,renderCobranca);
+
+  // KPIs
   const totalSaldo   = list.reduce((s,p) => s + saldoDe(p), 0);
   const totalParcial = list.reduce((s,p) => s + Math.min(p.valParc, cobTotalBaixas(p.lancId, p.parcIdx)), 0);
   const emAtraso     = list.filter(p => p.venc && p.venc < hoje);
@@ -15886,10 +15912,8 @@ function renderCobranca() {
     return;
   }
 
-  // Lista corrida, ordenada por vencimento e depois por cliente
-  const porNome = (a,b) => getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente), 'pt-BR', { numeric: true });
-  const ordenada = list.slice().sort((a,b) =>
-    (a.venc || '9999-99-99').localeCompare(b.venc || '9999-99-99') || porNome(a,b));
+  // Lista já ordenada (padrão: vencimento + cliente, ou pela coluna clicada)
+  const ordenada = list.slice();
   const _c = _cortarLista(ordenada, 14);
   tb.innerHTML = _c.aviso + _c.itens.map(p => _linhaCobranca(p, hoje)).join('');
   window._pdfLists = window._pdfLists || {}; window._pdfLists.cobranca = ordenada;
@@ -16500,7 +16524,7 @@ function renderCobrancaAdvogado() {
 
   const fA = selA.value, fC = selC.value;
   const busca = (document.getElementById('cobadv-busca').value || '').trim().toLowerCase();
-  const list = todas.filter(p => {
+  let list = todas.filter(p => {
     if (fA && advDe(p).nome !== fA) return false;
     if (fC && p.cliente !== fC) return false;
     if (busca) {
@@ -16510,6 +16534,28 @@ function renderCobrancaAdvogado() {
     return true;
   }).sort((a,b) => (a.venc || '9999').localeCompare(b.venc || '9999') ||
                    getClienteNome(a.cliente).localeCompare(getClienteNome(b.cliente), 'pt-BR', { numeric: true }));
+
+  // Classificar/filtrar direto no cabeçalho
+  const _atrasoAdv = p => (p.venc && p.venc < hoje) ? diffDias(p.venc, hoje) : 0;
+  const _jurosAdv = p => calcJuros(_saldoCob(p), p.venc, p.juros != null ? p.juros : getJurosGlobal());
+  const colsAdv = [
+    { key:'codcli',   label:'Código',      get:p=>getClienteCodigo(p.cliente)||null },
+    { key:'cliente',  label:'Cliente',     get:p=>getClienteNomePuro(p.cliente) },
+    { key:'prod',     label:'Produto',     get:p=>p.prod?getProdVendaNome(p.prod):null },
+    { key:'parcela',  label:'Parcela',     get:p=>p.parcIdx+(p.totalParc/1000), display:p=>`${p.parcIdx}/${p.totalParc}` },
+    { key:'romaneio', label:'Romaneio',    get:p=>p.romaneio||null },
+    { key:'valor',    label:'Valor',       get:p=>p.valParc, display:p=>fmtBRL(p.valParc) },
+    { key:'recebido', label:'Recebido',    get:p=>cobTotalBaixas(p.lancId,p.parcIdx), display:p=>fmtBRL(cobTotalBaixas(p.lancId,p.parcIdx)) },
+    { key:'saldo',    label:'Saldo',       get:p=>_saldoCob(p), display:p=>fmtBRL(_saldoCob(p)) },
+    { key:'juros',    label:'Juros',       get:p=>_jurosAdv(p), display:p=>_jurosAdv(p)>0?fmtBRL(_jurosAdv(p)):'—' },
+    { key:'venc',     label:'Vencimento',  get:p=>p.venc, display:p=>fmtDate(p.venc) },
+    { key:'atraso',   label:'Atraso',      get:p=>_atrasoAdv(p), display:p=>_atrasoAdv(p)+'d' },
+    { key:'advogado', label:'Advogado',    get:p=>advDe(p).nome||null },
+    { key:'enviado',  label:'Enviado em',  get:p=>advDe(p).data||null, display:p=>fmtDate(advDe(p).data) },
+    { key:'followup', label:'Follow-up',   get:p=>(cobGet(p.lancId,p.parcIdx).followups||[]).length },
+    { key:'acoes',    label:'Ações',       get:()=>'', noFilter:true }
+  ];
+  list = efMount('cobranca-advogado','th-cobranca-advogado-row',colsAdv,list,renderCobrancaAdvogado);
 
   const totSaldo = list.reduce((a, p) => a + _saldoCob(p), 0);
   const totParcial = list.reduce((a, p) => a + Math.min(p.valParc, cobTotalBaixas(p.lancId, p.parcIdx)), 0);
@@ -16522,10 +16568,10 @@ function renderCobrancaAdvogado() {
   const tb = document.getElementById('tb-cobranca-advogado');
   window._pdfLists = window._pdfLists || {}; window._pdfLists['cobranca-advogado'] = list.slice();
   if (!list.length) {
-    tb.innerHTML = '<tr><td colspan="14" class="empty-state">Nenhuma parcela com advogado. Use o botão ⚖️ Advogado na tela de Cobrança.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="15" class="empty-state">Nenhuma parcela com advogado. Use o botão ⚖️ Advogado na tela de Cobrança.</td></tr>';
     return;
   }
-  const _c = _cortarLista(list, 14);
+  const _c = _cortarLista(list, 15);
   tb.innerHTML = _c.aviso + _c.itens.map(p => {
     const reg = cobGet(p.lancId, p.parcIdx);
     const adv = reg.advogado || {};
@@ -16535,7 +16581,8 @@ function renderCobrancaAdvogado() {
     const juros = calcJuros(saldo, p.venc, p.juros != null ? p.juros : getJurosGlobal());
     const nFup = (reg.followups || []).length;
     return `<tr>
-      <td><b>${esc(getClienteNome(p.cliente))}</b></td>
+      <td style="font-family:DM Mono,monospace;font-size:12px">${esc(getClienteCodigo(p.cliente))||'—'}</td>
+      <td><b>${esc(getClienteNomePuro(p.cliente))}</b></td>
       <td style="font-size:12px">${p.prod ? esc(getProdVendaNome(p.prod)) : '—'}</td>
       <td style="font-family:DM Mono,monospace">${p.parcIdx}/${p.totalParc}</td>
       <td style="font-family:DM Mono,monospace;font-size:12px">${esc(p.romaneio)||'—'}</td>
